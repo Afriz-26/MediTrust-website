@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Medynex Solutions LLP &amp; MediTrust Insights</title>
+    <link>https://medynex.com/blog</link>
+    <description>Latest insights on Digital Healthcare, Clinical AI, Telemedicine, ABDM Integration, and Health Tech Innovations in India.</description>
+    <language>en-in</language>
+    <copyright>Copyright 2026 Medynex Solutions LLP. All rights reserved.</copyright>
+    <lastBuildDate>Sun, 02 Aug 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://medynex.com/rss.xml" rel="self" type="application/rss+xml"/>
+    
+    <item>
+      <title>Understanding Digital Prescriptions &amp; ABDM Integration in India</title>
+      <link>https://medynex.com/blog/1</link>
+      <description>How digital prescriptions and the Ayushman Bharat Digital Mission (ABDM) are revolutionizing healthcare delivery and record management.</description>
+      <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
+      <guid>https://medynex.com/blog/1</guid>
+    </item>
+    
+    <item>
+      <title>How Sub-Second Hospital Queue Tokens Transform Outpatient Management</title>
+      <link>https://medynex.com/blog/2</link>
+      <description>Exploring the architecture behind MediTrust's real-time queue management system for clinics and multi-specialty hospitals.</description>
+      <pubDate>Fri, 31 Jul 2026 00:00:00 GMT</pubDate>
+      <guid>https://medynex.com/blog/2</guid>
+    </item>
+
+    <item>
+      <title>AI in Primary Healthcare: Responsible Assistant vs Autonomous Diagnosis</title>
+      <link>https://medynex.com/blog/3</link>
+      <description>An analysis of responsible AI implementation in symptom checking, medicine verification, and doctor support tools.</description>
+      <pubDate>Wed, 29 Jul 2026 00:00:00 GMT</pubDate>
+      <guid>https://medynex.com/blog/3</guid>
+    </item>
+  </channel>
+</rss>

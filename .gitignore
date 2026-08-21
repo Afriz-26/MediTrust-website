@@ -1,0 +1,14 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+# Python caches, bytecode & virtual environments (agent skills live under .claude/)
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+

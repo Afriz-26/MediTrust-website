@@ -1,0 +1,6 @@
+{
+  "name": "Medynex Solutions - MediTrust Healthcare Platform",
+  "description": "Modern, intelligent healthcare technology ecosystem connecting patients, doctors, hospitals, pharmacies, and laboratories by Medynex Solutions LLP.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

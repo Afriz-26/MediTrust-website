@@ -1,0 +1,18 @@
+{
+  "name": "Medynex Solutions - MediTrust Healthcare Ecosystem",
+  "short_name": "MediTrust",
+  "description": "Unified digital healthcare platform connecting patients, doctors, hospitals, pharmacies, and diagnostic laboratories across India.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1120",
+  "theme_color": "#0B1120",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

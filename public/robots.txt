@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboards/
+Disallow: /api/
+
+Sitemap: https://medynex.com/sitemap.xml
