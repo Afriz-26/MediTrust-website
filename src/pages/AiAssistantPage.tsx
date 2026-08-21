@@ -718,7 +718,7 @@ export const AiAssistantPage: React.FC = () => {
         {
           messages: updatedHistory.filter(m => !m.isError).map(m => ({ role: m.sender === 'user' ? 'user' : 'model', content: m.text })),
           language: selectedLanguage,
-          model: thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3.6-flash'
+          model: thinkingMode ? 'gemini-3.6-flash' : 'gemini-3.6-flash'
         },
         (token) => {
           accumulatedText += token;

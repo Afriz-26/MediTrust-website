@@ -209,7 +209,7 @@ Core Mandates & Communication Rules:
 
     const response: any = await withRetry(async () => {
       return await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: 'gemini-3.6-flash',
         contents,
         config: {
           responseMimeType: 'application/json'

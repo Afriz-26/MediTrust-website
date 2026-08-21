@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-    const { message, history = [], language = 'English', model = 'gemini-3.7-flash' } = body;
+    const { message, history = [], language = 'English', model = 'gemini-3.6-flash' } = body;
 
     const messages = [
       ...history.map((h: any) => ({ role: h.sender === 'user' ? ('user' as const) : ('model' as const), content: h.text })),

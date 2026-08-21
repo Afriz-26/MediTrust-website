@@ -60,7 +60,7 @@ ${langRule}`;
   public static async *generateStreamResponse(
     messages: ChatMessage[],
     language: string = 'English',
-    modelName: string = 'gemini-3.7-flash'
+    modelName: string = 'gemini-3.6-flash'
   ): AsyncGenerator<string, void, unknown> {
     const ai = this.getAiClient();
 
@@ -129,7 +129,7 @@ ${langRule}`;
     }
 
     try {
-      const validModel = modelName.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-3.7-flash';
+      const validModel = 'gemini-3.6-flash';
 
       const responseStream = await withRetry(
         async () => {
@@ -139,10 +139,10 @@ ${langRule}`;
               contents
             });
           } catch (mErr: any) {
-            if (validModel !== 'gemini-3.7-flash') {
-              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-3.7-flash.`);
+            if (validModel !== 'gemini-3.6-flash') {
+              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-3.6-flash.`);
               return await ai.models.generateContentStream({
-                model: 'gemini-3.7-flash',
+                model: 'gemini-3.6-flash',
                 contents
               });
             }

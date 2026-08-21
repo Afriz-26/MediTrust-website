@@ -145,7 +145,7 @@ Respond in ${language}. Format in clean tables and Markdown. Include medical dis
     try {
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
+          model: 'gemini-3.6-flash',
           contents: [prompt, imagePart]
         });
       }, { 

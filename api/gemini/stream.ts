@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-    const { messages = [], language = 'English', model = 'gemini-3.7-flash' } = body;
+    const { messages = [], language = 'English', model = 'gemini-3.6-flash' } = body;
 
     for await (const token of ConversationService.generateStreamResponse(messages, language, model)) {
       res.write(`data: ${JSON.stringify({ text: token })}\n\n`);

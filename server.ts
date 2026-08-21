@@ -551,11 +551,11 @@ Always maintain a caring, professional, trustworthy tone. Always remind users th
 If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupati, Hyderabad, Chennai, Bangalore, etc.), provide clear, helpful recommendations.`;
 
       if (thinkingMode) {
-        // Use gemini-3.7-flash with High Thinking Level for deep clinical reasoning
+        // Use gemini-3.6-flash with High Thinking Level for deep clinical reasoning
         const response = await withRetry(async () => {
           try {
             return await ai.models.generateContent({
-              model: 'gemini-3.7-flash',
+              model: 'gemini-3.6-flash',
               contents: [
                 {
                   role: 'user',
@@ -569,9 +569,9 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
               }
             });
           } catch (tErr: any) {
-            console.warn(`[Gemini Thinking Chat] Fallback to standard 3.7-flash: ${tErr?.message}`);
+            console.warn(`[Gemini Thinking Chat] Fallback to standard 3.6-flash: ${tErr?.message}`);
             return await ai.models.generateContent({
-              model: 'gemini-3.7-flash',
+              model: 'gemini-3.6-flash',
               contents: [
                 {
                   role: 'user',
@@ -603,7 +603,7 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
         tools.push({ googleSearch: {} });
       }
 
-      const model = 'gemini-3.7-flash';
+      const model = 'gemini-3.6-flash';
 
       const contents: any[] = history.map((item: { sender: string; text: string }) => ({
         role: item.sender === 'user' ? 'user' : 'model',
@@ -705,7 +705,7 @@ Return a structured JSON object.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
+          model: 'gemini-3.6-flash',
           contents: { parts: [imagePart, promptPart] },
           config: {
             responseMimeType: 'application/json',
@@ -804,7 +804,7 @@ Format as clean structured JSON.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
+          model: 'gemini-3.6-flash',
           contents: { parts },
           config: {
             responseMimeType: 'application/json',
@@ -881,7 +881,7 @@ Format as clean structured JSON.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
+          model: 'gemini-3.6-flash',
           contents: {
             parts: [
               audioPart,
