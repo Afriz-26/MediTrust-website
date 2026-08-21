@@ -13,11 +13,26 @@ export interface VoiceTriageResult {
 export class VoiceService {
   private static aiClient: GoogleGenAI | null = null;
 
-  private static getAiClient(): GoogleGenAI {
+  private static PLACEHOLDER_API_KEYS = [
+    'MY_GEMINI_API_KEY',
+    'your_gemini_api_key_here',
+    'your-gemini-api-key',
+    'YOUR_API_KEY',
+    'REPLACE_WITH_YOUR_KEY',
+    'your-supabase-anon-key',
+  ];
+
+  private static getAiClient(): GoogleGenAI | null {
     if (!this.aiClient) {
       const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
-        throw new Error('GEMINI_API_KEY environment variable is missing.');
+        console.warn('GEMINI_API_KEY environment variable is missing. Voice features will use fallback mode.');
+        return null;
+      }
+      const isPlaceholder = this.PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
+      if (isPlaceholder) {
+        console.warn('GEMINI_API_KEY is set to a placeholder or empty value. Voice features will use fallback mode.');
+        return null;
       }
       this.aiClient = new GoogleGenAI({
         apiKey,
@@ -65,7 +80,16 @@ export class VoiceService {
     voiceName: string = 'Aoede'
   ): Promise<{ audioBase64: string; mimeType: string }> {
     const ai = this.getAiClient();
-    
+
+    // If no valid API key, return empty audio (browser Web Speech API fallback)
+    if (!ai) {
+      console.warn('[Gemini TTS] No valid API key. Returning empty audio (Web Speech API fallback will be used).');
+      return {
+        audioBase64: '',
+        mimeType: 'audio/wav'
+      };
+    }
+
     // Clean markdown symbols for cleaner pronunciation
     const spokenText = text
       .replace(/[*#_`~[\]()]/g, ' ')
@@ -131,6 +155,17 @@ export class VoiceService {
     fallbackTextQuery?: string
   ): Promise<VoiceTriageResult> {
     const ai = this.getAiClient();
+
+    // If no valid API key, return a fallback voice response
+    if (!ai) {
+      console.warn('[VoiceService] No valid API key. Returning offline fallback voice response.');
+      return {
+        transcript: fallbackTextQuery || 'Voice consultation request received',
+        responseText: `Hello! I'm MediTrust AI Voice Assistant. I heard your query about "${fallbackTextQuery || 'healthcare'}". For immediate assistance, please switch to text chat mode or type your question directly. Remember to consult a licensed doctor for any medical concerns.`,
+        language,
+        disclaimer: 'MediTrust AI provides health guidance, not medical diagnosis. Please consult a licensed doctor for personalized care.',
+      };
+    }
 
     const systemPrompt = `You are MediTrust Voice Clinical & Healthcare Assistant, developed by Medynex Solutions LLP.
 You are assisting a patient through spoken voice in ${language}.

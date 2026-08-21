@@ -28,9 +28,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: any) {
     const errorMessage = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
-    const errorStatus = err?.status || err?.code || '';
+    const errorStatus = err?.status || err?.code || '500';
     const errorDetails = err?.response?.data || err?.error || err?.response || '';
     console.error(`[Error in /api/gemini/chat Vercel function] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-    res.status(500).json({ error: errorMessage || 'Failed to process chat', details: errorDetails });
+    // Return fallback with HTTP 200 to avoid client-side HTTP_500 errors
+    const fallbackText = `I am temporarily unable to reach the Gemini server (HTTP_${errorStatus}). Please check your connection or try again shortly.`;
+    res.status(200).json({
+      text: fallbackText,
+      groundingChunks: [],
+      thinkingUsed: false,
+      error: errorMessage
+    });
   }
 }

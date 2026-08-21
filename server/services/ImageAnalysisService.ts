@@ -3,9 +3,23 @@ import { withRetry } from '../utils/retry';
 import { cleanBase64Data, sanitizeMimeType } from '../utils/base64';
 
 export class ImageAnalysisService {
+  private static PLACEHOLDER_API_KEYS = [
+    'MY_GEMINI_API_KEY',
+    'your_gemini_api_key_here',
+    'your-gemini-api-key',
+    'YOUR_API_KEY',
+    'REPLACE_WITH_YOUR_KEY',
+    'your-supabase-anon-key',
+  ];
+
   private static getAiClient() {
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
+      return null;
+    }
+    const isPlaceholder = this.PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
+    if (isPlaceholder) {
+      console.warn('GEMINI_API_KEY is set to a placeholder or empty value. Using offline fallback mode.');
       return null;
     }
     return new GoogleGenAI({ apiKey });

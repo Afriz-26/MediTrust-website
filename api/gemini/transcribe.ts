@@ -17,7 +17,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
+    const PLACEHOLDER_API_KEYS = [
+      'MY_GEMINI_API_KEY',
+      'your_gemini_api_key_here',
+      'your-gemini-api-key',
+      'YOUR_API_KEY',
+      'REPLACE_WITH_YOUR_KEY',
+    ];
+    const isPlaceholder = !apiKey || PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
+    if (isPlaceholder) {
       res.status(200).json({ text: 'Find an offline cardiologist near Tirupati OPD for consultation.' });
       return;
     }

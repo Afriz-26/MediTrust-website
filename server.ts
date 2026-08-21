@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,6 +30,28 @@ async function startServer() {
   app.use(express.json({ limit: '20mb' }));
 
   // Shared Gemini Client setup
+  const PLACEHOLDER_API_KEYS = [
+    'MY_GEMINI_API_KEY',
+    'your_gemini_api_key_here',
+    'your-gemini-api-key',
+    'YOUR_API_KEY',
+    'REPLACE_WITH_YOUR_KEY',
+    'your-supabase-anon-key',
+  ];
+
+  const hasValidGeminiApiKey = (): boolean => {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+    if (!apiKey) {
+      return false;
+    }
+    const isPlaceholder = PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
+    if (isPlaceholder) {
+      console.warn('GEMINI_API_KEY is set to a placeholder or empty value. Falling back to default response mode.');
+      return false;
+    }
+    return true;
+  };
+
   const getGeminiClient = () => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
     if (!apiKey) {
@@ -302,7 +327,19 @@ async function startServer() {
 
     try {
       const { messages = [], language = 'English', model = 'gemini-3.6-flash' } = req.body;
-      
+
+      // If no valid API key is configured, send fallback response directly
+      // to avoid HTTP 500 errors from failed API calls
+      if (!hasValidGeminiApiKey()) {
+        const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
+        const fallbackText = generateSmartClinicalFallback(lastUserMsg || 'Hello', messages as any[], language);
+        res.write(`data: ${JSON.stringify({ text: fallbackText })}\n\n`);
+        res.write(`data: ${JSON.stringify({ text: SafetyLayer.getDisclaimerBanner(language) })}\n\n`);
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+        return;
+      }
+
       for await (const token of ConversationService.generateStreamResponse(messages, language, model)) {
         res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
       }
@@ -314,7 +351,9 @@ async function startServer() {
       const errorStatus = err?.status || err?.code || '';
       const errorDetails = err?.response?.data || err?.error || err?.response || '';
       console.error(`[SSE Stream Error] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      res.write(`data: ${JSON.stringify({ error: errorMessage || 'Stream generation failed', details: errorDetails })}\n\n`);
+      // Send error as SSE data (HTTP 200) so the client can display a friendly fallback
+      res.write(`data: ${JSON.stringify({ text: `I am temporarily unable to reach the Gemini server (HTTP_${errorStatus || 500}). Please check your connection or try again shortly.` })}\n\n`);
+      res.write(`data: [DONE]\n\n`);
       res.end();
     }
   });
@@ -480,8 +519,7 @@ Regarding your query about **"${message}"**:
         return;
       }
 
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
+      if (!hasValidGeminiApiKey()) {
         // Fallback clinical response if key is missing
         res.json({
           text: generateSmartClinicalFallback(message, history, language),
@@ -626,8 +664,7 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
         return;
       }
 
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
+      if (!hasValidGeminiApiKey()) {
         res.json({
           analysis: {
             skinTypeEstimated: 'Combination / Sensitive Skin',
@@ -725,8 +762,7 @@ Return a structured JSON object.`
     try {
       const { query, barcode, imageBase64 } = req.body;
 
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
+      if (!hasValidGeminiApiKey()) {
         res.json({
           medicine: {
             name: query || 'Telmisartan 40mg',
@@ -826,8 +862,7 @@ Format as clean structured JSON.`
         return;
       }
 
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
+      if (!hasValidGeminiApiKey()) {
         res.json({ text: 'I am looking for an offline cardiologist near Tirupati for a routine checkup.' });
         return;
       }

@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ConversationService } from '../../server/services/ConversationService';
 
+const PLACEHOLDER_API_KEYS = [
+  'MY_GEMINI_API_KEY',
+  'your_gemini_api_key_here',
+  'your-gemini-api-key',
+  'YOUR_API_KEY',
+  'REPLACE_WITH_YOUR_KEY',
+  'your-supabase-anon-key',
+];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -24,10 +33,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.end();
   } catch (err: any) {
     const errorMessage = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
-    const errorStatus = err?.status || err?.code || '';
+    const errorStatus = err?.status || err?.code || '500';
     const errorDetails = err?.response?.data || err?.error || err?.response || '';
     console.error(`[SSE Stream Error in Vercel function] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-    res.write(`data: ${JSON.stringify({ error: errorMessage || 'Stream generation failed', details: errorDetails })}\n\n`);
+    // Send error as SSE text data (HTTP 200) so the client can display a friendly fallback
+    res.write(`data: ${JSON.stringify({ text: `I am temporarily unable to reach the Gemini server (HTTP_${errorStatus || 500}). Please check your connection or try again shortly.` })}\n\n`);
+    res.write('data: [DONE]\n\n');
     res.end();
   }
 }
