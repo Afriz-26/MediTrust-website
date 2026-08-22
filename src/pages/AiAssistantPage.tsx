@@ -713,19 +713,34 @@ export const AiAssistantPage: React.FC = () => {
     let accumulatedText = '';
 
     try {
-      await fetchStreamWithRetryAndTimeout(
-        '/api/gemini/stream',
+      // Use the non-streaming /api/gemini/chat route for reliable Vercel serverless support.
+      // (SSE streaming over Vercel serverless functions is subject to buffering/timeouts;
+      //  the chat route returns a single JSON { text } response which deploys reliably.)
+      const chatHistory = updatedHistory
+        .filter(m => !m.isError)
+        .map(m => ({ sender: m.sender, text: m.text }));
+
+      const data = await fetchJSONWithRetryAndTimeout(
+        '/api/gemini/chat',
         {
-          messages: updatedHistory.filter(m => !m.isError).map(m => ({ role: m.sender === 'user' ? 'user' : 'model', content: m.text })),
-          language: selectedLanguage,
-          model: thinkingMode ? 'gemini-3.6-flash' : 'gemini-3.6-flash'
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: query,
+            history: chatHistory,
+            language: selectedLanguage,
+            model: 'gemini-3.6-flash'
+          })
         },
-        (token) => {
-          accumulatedText += token;
-          setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: accumulatedText } : msg));
-        },
-        userController.signal
+        90000,
+        3
       );
+
+      const aiText = data?.text || '';
+      if (aiText) {
+        accumulatedText = aiText;
+        setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: aiText } : msg));
+      }
     } catch (err: any) {
       if (err.message === 'USER_ABORTED' || userController.signal.aborted) {
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
