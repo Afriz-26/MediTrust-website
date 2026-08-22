@@ -1,5 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ConversationService } from '../../server/services/ConversationService';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Raise the Vercel function hard-limit so real Gemini streaming can complete (5–20s+).
+export const config = { maxDuration: 60 };
 
 const PLACEHOLDER_API_KEYS = [
   'MY_GEMINI_API_KEY',

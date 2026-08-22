@@ -1,5 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ConversationService } from '../../server/services/ConversationService';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Gemini calls take 5–20s; Vercel Hobby default maxDuration is 10s which kills the function → HTTP 500.
+// Raise the hard limit so real AI responses can stream back reliably.
+export const config = { maxDuration: 60 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

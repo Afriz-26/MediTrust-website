@@ -321,7 +321,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initAuth = async () => {
       if (isSupabaseConfigured) {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          // Await session resolution safely. getSession can return `data` as undefined on
+          // auth/network errors; destructuring { session } from an undefined `data` throws.
+          const { data: sessionData } = await supabase.auth.getSession();
+          const session = sessionData?.session ?? null;
           if (session?.user) {
             // Load user profile safely from Supabase
             const profile = await SupabaseDB.fetchProfile(session.user.id);
