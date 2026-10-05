@@ -8,10 +8,12 @@ MediTrust is a healthcare discovery platform for finding doctors, hospitals, pha
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local`.
-3. Set `GEMINI_API_KEY` in `.env.local` to your Gemini API key. This is a server-only secret; do not add a `VITE_` prefix or commit the file.
+3. Add the server-side API keys needed for optional voice transcription, text-to-speech, skin scanning, and medicine verification. Keep secrets server-only; do not add a `VITE_` prefix or commit the file.
 4. Start the app with `npm run dev`.
 
-The server loads `.env.local` first, then `.env`. For Vercel deployments, add `GEMINI_API_KEY` in **Project Settings → Environment Variables** for the environments you deploy, then redeploy. Without a Gemini key, or while Gemini is rate-limited or temporarily unavailable, the assistant uses its limited local healthcare reference and clearly identifies that fallback. General generative answers require a working Gemini key and available provider quota.
+The assistant's text chat runs in the visitor's browser using the multilingual Qwen3 0.6B model through WebLLM and WebGPU; it does not send chat prompts to Gemini or require a chat API key. The first chat downloads about **0.33 GB** of model files from Hugging Face and stores them in the browser cache. The download is one-time per browser unless its site data is cleared. A WebGPU-capable browser and sufficient device memory are required. The compact model can make mistakes and is not a medical device; its responses are general information, not diagnosis or treatment.
+
+The server loads `.env.local` first, then `.env`. For Vercel deployments, configure `GEMINI_API_KEY` only if you enable the separate Gemini-backed voice transcription, text-to-speech, skin scanning, or medicine-verification tools. Those optional tools may incur API usage; the browser-local text chat does not.
 
 ## Search and listings
 

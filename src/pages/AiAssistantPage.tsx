@@ -8,9 +8,6 @@ import {
   Send, 
   Sparkles, 
   Globe, 
-  MapPin, 
-  Search, 
-  Brain, 
   Camera, 
   Upload, 
   Pill, 
@@ -35,6 +32,7 @@ import { SEO } from '../components/common/SEO';
 import { AI_KEYWORDS } from '../lib/seo';
 import { useAuth } from '../context/AuthContext';
 import { VoiceModal } from '../components/assistant/VoiceModal';
+import { streamOnDeviceAssistantReply } from '../lib/onDeviceAssistant';
 
 
 interface ChatMessage {
@@ -66,20 +64,20 @@ interface MedicineDetail {
 }
 
 // Typing indicator component for humanized streaming pauses
-const TypingIndicator: React.FC<{ thinkingMode?: boolean; language?: string }> = ({ thinkingMode, language }) => {
+const TypingIndicator: React.FC<{ modelReady?: boolean; language?: string }> = ({ modelReady, language }) => {
   const [stageIndex, setStageIndex] = useState(0);
 
-  const stages = thinkingMode
+  const stages = !modelReady
     ? [
-        'Analyzing clinical history & query parameters...',
-        'Consulting internal medical knowledge base...',
-        'Synthesizing diagnostic reasoning & safety guidelines...',
-        `Formulating response in ${language || 'English'}...`
+        'Preparing the on-device model...',
+        'Downloading the model for this browser...',
+        'This first-time setup may take several minutes...',
+        `Getting ready to respond in ${language || 'English'}...`
       ]
     : [
-        'MediTrust AI is formulating response...',
-        'Evaluating healthcare context...',
-        `Drafting advice in ${language || 'English'}...`
+        'Generating privately on your device...',
+        'Checking the healthcare context...',
+        `Preparing a response in ${language || 'English'}...`
       ];
 
   useEffect(() => {
@@ -151,10 +149,9 @@ export const AiAssistantPage: React.FC = () => {
   // Chat State
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [inputQuery, setInputQuery] = useState('');
-  const [enableSearch, setEnableSearch] = useState(false);
-  const [enableMaps, setEnableMaps] = useState(false);
-  const [thinkingMode, setThinkingMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [modelReady, setModelReady] = useState(false);
+  const [modelProgress, setModelProgress] = useState({ progress: 0, text: 'Ready to download the on-device model.' });
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
   // AbortController for Stop Generation
@@ -189,7 +186,7 @@ export const AiAssistantPage: React.FC = () => {
       {
         id: 'm-1',
         sender: 'ai',
-        text: `Hello${greetingName}! I am your **MediTrust AI Healthcare Assistant** by Medynex Solutions LLP. Powered by Gemini models, I can help you with:\n\n- **Symptom Triage & Clinical Guidance**\n- **Grounded Doctor & Hospital Discovery** in Tirupati, Hyderabad, etc.\n- **Medicine Uses, Dosages & Contraindications**\n- **Digital Token & Hospital Queue Guidance**\n\nHow can I assist you today?`,
+        text: `Hello${greetingName}! I am your **MediTrust on-device healthcare information assistant**. Chat responses are generated on your device, with no chat API charge. I can share general health information, but I cannot diagnose, prescribe, or provide live doctor and pharmacy listings. For personal medical decisions, please consult a qualified professional.\n\nHow can I help?`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
@@ -210,10 +207,10 @@ export const AiAssistantPage: React.FC = () => {
   ];
 
   const quickPrompts = [
-    'Find offline cardiologists near Tirupati OPD',
+    'Where can I search for doctors near Tirupati?',
     'Uses and side effects of Telmisartan 40mg',
     'I have mild fever and sore throat for 2 days',
-    'How do I track my live hospital queue token?'
+    'What should I check before visiting a hospital?'
   ];
 
   // Multimodal Scan sub-mode state
@@ -505,134 +502,22 @@ export const AiAssistantPage: React.FC = () => {
     };
     setMessages(prev => [...prev, userMsg, aiMsg]);
   };
-  const STREAM_TIMEOUT_MS = 25000;
-
-  const fetchStreamWithRetryAndTimeout = async (
-    url: string,
-    payload: any,
-    onChunk: (text: string) => void,
-    userSignal: AbortSignal
-  ) => {
-    const maxRetries = 3;
-    let attempt = 0;
-
-    while (attempt <= maxRetries) {
-      attempt++;
-      let inactivityTimeoutId: any = null;
-      const internalController = new AbortController();
-
-      if (userSignal.aborted) {
-        throw new Error('USER_ABORTED');
-      }
-
-      const onUserAbort = () => internalController.abort();
-      userSignal.addEventListener('abort', onUserAbort);
-
-      const resetInactivityTimer = () => {
-        if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
-        inactivityTimeoutId = setTimeout(() => {
-          internalController.abort();
-        }, STREAM_TIMEOUT_MS);
-      };
-
-      try {
-        resetInactivityTimer();
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: internalController.signal,
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok || !response.body) {
-          if (response.status === 429 || response.status >= 500) {
-            throw new Error(`HTTP_${response.status}`);
-          }
-          throw new Error(`HTTP_STATUS_${response.status}`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let streamBuffer = '';
-        const handleStreamEvent = (event: string) => {
-          const data = event
-            .split('\n')
-            .filter(line => line.startsWith('data:'))
-            .map(line => line.slice(5).trim())
-            .join('\n');
-          if (!data || data === '[DONE]') return;
-
-          const parsed = JSON.parse(data);
-          if (parsed.error) {
-            throw new Error(`GEMINI_PROVIDER_ERROR:${parsed.status || 'unavailable'}`);
-          }
-          if (parsed.text) onChunk(parsed.text);
-        };
-
-        while (true) {
-          const { done, value } = await reader.read();
-          resetInactivityTimer();
-
-          if (done) {
-            streamBuffer += decoder.decode();
-            break;
-          }
-
-          streamBuffer += decoder.decode(value, { stream: true });
-          let eventEnd = streamBuffer.indexOf('\n\n');
-          while (eventEnd !== -1) {
-            handleStreamEvent(streamBuffer.slice(0, eventEnd));
-            streamBuffer = streamBuffer.slice(eventEnd + 2);
-            eventEnd = streamBuffer.indexOf('\n\n');
-          }
-        }
-        if (streamBuffer.trim()) handleStreamEvent(streamBuffer);
-
-        if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
-        userSignal.removeEventListener('abort', onUserAbort);
-        return; // Stream finished successfully!
-
-      } catch (err: any) {
-        if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
-        userSignal.removeEventListener('abort', onUserAbort);
-
-        if (userSignal.aborted) {
-          throw new Error('USER_ABORTED');
-        }
-
-        const isRetryable =
-          attempt < maxRetries &&
-          (err.name === 'AbortError' ||
-           err.message?.includes('HTTP_429') ||
-           err.message?.includes('HTTP_500') ||
-           err.message?.includes('HTTP_503') ||
-           err.message?.includes('Failed to fetch') ||
-           err.message?.includes('fetch failed'));
-
-        if (!isRetryable) {
-          throw err;
-        }
-
-        const delayMs = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 300, 5000);
-        console.warn(`[Client Stream Retry ${attempt}/${maxRetries}] ${err.message}. Retrying in ${Math.round(delayMs)}ms...`);
-        await new Promise((res) => setTimeout(res, delayMs));
-      }
-    }
-  };
-
   // Generic JSON Fetch with Retry and Timeout
   const fetchJSONWithRetryAndTimeout = async (
     url: string,
     options: RequestInit = {},
     timeoutMs: number = 25000,
-    maxRetries: number = 3
+    maxRetries: number = 3,
+    userSignal?: AbortSignal
   ) => {
     let attempt = 0;
 
     while (attempt <= maxRetries) {
       attempt++;
+      if (userSignal?.aborted) throw new Error('USER_ABORTED');
       const controller = new AbortController();
+      const abortForUser = () => controller.abort();
+      userSignal?.addEventListener('abort', abortForUser, { once: true });
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
@@ -653,6 +538,9 @@ export const AiAssistantPage: React.FC = () => {
         return await response.json();
       } catch (err: any) {
         clearTimeout(timeoutId);
+        userSignal?.removeEventListener('abort', abortForUser);
+
+        if (userSignal?.aborted) throw new Error('USER_ABORTED');
 
         const isRetryable =
           attempt < maxRetries &&
@@ -670,11 +558,14 @@ export const AiAssistantPage: React.FC = () => {
         const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 300, 5000);
         console.warn(`[Client JSON Retry ${attempt}/${maxRetries}] Retrying in ${Math.round(backoffMs)}ms...`);
         await new Promise((res) => setTimeout(res, backoffMs));
+      } finally {
+        clearTimeout(timeoutId);
+        userSignal?.removeEventListener('abort', abortForUser);
       }
     }
   };
 
-  // Streaming SSE Chat handler
+  // Stream chat from the browser-local model; chat text is not sent to the server.
   const handleSendMessage = async (e?: React.FormEvent, customText?: string, isRegenerate = false) => {
     if (e) e.preventDefault();
     const query = customText || inputQuery;
@@ -718,65 +609,42 @@ export const AiAssistantPage: React.FC = () => {
     const userController = new AbortController();
     abortControllerRef.current = userController;
 
-    let accumulatedText = '';
-
     try {
-      await fetchStreamWithRetryAndTimeout(
-        '/api/gemini/stream',
-        {
-          messages: updatedHistory.filter(m => !m.isError).map(m => ({ role: m.sender === 'user' ? 'user' : 'model', content: m.text })),
-          language: selectedLanguage,
-          model: thinkingMode ? 'gemini-2.5-pro' : 'gemini-2.5-flash',
-          enableSearch,
-          enableMaps
+      const chatHistory = updatedHistory
+        .slice(0, -1)
+        .filter(m => !m.isError)
+        .map(m => ({ role: m.sender === 'ai' ? 'assistant' as const : 'user' as const, content: m.text }));
+      const response = await streamOnDeviceAssistantReply({
+        query,
+        history: chatHistory,
+        language: selectedLanguage,
+        signal: userController.signal,
+        onProgress: ({ progress, text }) => {
+          setModelProgress({ progress: Math.round(progress * 100), text });
         },
-        (token) => {
-          accumulatedText += token;
-          setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: accumulatedText } : msg));
+        onText: (text) => {
+          setModelReady(true);
+          setModelProgress({ progress: 100, text: 'On-device model is ready.' });
+          setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text } : msg));
         },
-        userController.signal
-      );
+      });
+      if (!userController.signal.aborted && !response.trim()) {
+        throw new Error('The on-device model returned an empty response. Please retry.');
+      }
+      setModelReady(true);
+      setModelProgress({ progress: 100, text: 'On-device model is ready.' });
+      setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: response } : msg));
     } catch (err: any) {
-      if (err.message === 'USER_ABORTED' || userController.signal.aborted) {
+      if (err.name === 'AbortError' || userController.signal.aborted) {
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
           ...msg,
           text: msg.text + (msg.text ? '\n\n_[Generation stopped by user.]_' : '_[Request cancelled.]_')
         } : msg));
       } else {
-        console.warn('Stream failed or incomplete, attempting direct chat fallback:', err?.message);
-        // Fallback to non-streaming POST /api/gemini/chat
-        try {
-          const fallbackData = await fetchJSONWithRetryAndTimeout('/api/gemini/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: query,
-              history: updatedHistory.slice(0, -1),
-              language: selectedLanguage,
-              model: thinkingMode ? 'gemini-2.5-pro' : 'gemini-2.5-flash',
-              enableSearch,
-              enableMaps
-            })
-          }, 20000, 2);
-
-          if (fallbackData?.text) {
-            setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
-              ...msg,
-              text: fallbackData.text,
-              isError: false
-            } : msg));
-            return;
-          }
-        } catch (fallbackErr: any) {
-          console.error('Fallback chat API also failed:', fallbackErr);
-        }
-
-        console.error('Assistant request failed:', err);
+        console.error('On-device assistant failed:', err);
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
           ...msg,
-          text: accumulatedText
-            ? `${accumulatedText}\n\nThe assistant service is temporarily unavailable. Please try again shortly.`
-            : 'The assistant service is temporarily unavailable. Please try again shortly. For urgent symptoms, contact emergency services.',
+          text: `${err.message || 'The on-device model could not start.'} Your browser needs WebGPU support and enough available memory. You can retry after updating your browser or freeing device memory. For urgent symptoms, contact emergency services.`,
           isError: true
         } : msg));
       }
@@ -787,9 +655,7 @@ export const AiAssistantPage: React.FC = () => {
   };
 
   const handleStopGeneration = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    abortControllerRef.current?.abort();
   };
 
   const handleCopyMessage = (id: string, text: string) => {
@@ -926,8 +792,8 @@ export const AiAssistantPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-10">
       <SEO
-        title="AI Medical Assistant & Symptom Triage | MediTrust AI"
-        description="AI-powered clinical symptom triage, voice assistant, grounded doctor search, multimodal skin scanner, and medicine verifier by Medynex Solutions LLP."
+        title="On-device Healthcare Information Assistant | MediTrust AI"
+        description="Private, on-device healthcare information chat, plus voice assistant, skin scanner, and medicine verifier from Medynex Solutions LLP."
         keywords={AI_KEYWORDS}
         canonicalUrl="https://medynex.com/ai-assistant"
       />
@@ -936,11 +802,11 @@ export const AiAssistantPage: React.FC = () => {
         {/* Page Title Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono bg-cyan-500/10 border border-cyan-500/20 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-cyan-400" /> Powered by Gemini Clinical AI Engine
+            <Sparkles className="w-4 h-4 text-cyan-400" /> Private, on-device chat • No Gemini chat API
           </span>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Medynex AI Healthcare Suite</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
-            Multilingual clinical triage, voice-activated guidance, grounded Google Maps doctor discovery, skin analysis, and medicine verifier.
+            General healthcare information generated in your browser, alongside voice tools, skin analysis, and medicine verification.
           </p>
         </div>
 
@@ -981,10 +847,8 @@ export const AiAssistantPage: React.FC = () => {
         {activeTab === 'chat' && (
           <div className="space-y-4">
             
-            {/* Triage & Grounding Controls */}
+            {/* Local model status and response language */}
             <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
-              
-              {/* Language Selector */}
               <div className="flex items-center space-x-2">
                 <Globe className="w-4 h-4 text-cyan-400" />
                 <span className="font-semibold text-slate-300">Respond In:</span>
@@ -997,48 +861,38 @@ export const AiAssistantPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Grounding & Thinking Toggles */}
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-1.5 cursor-pointer bg-[#0B1120] px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={enableMaps}
-                    onChange={(e) => {
-                      setEnableMaps(e.target.checked);
-                      if (e.target.checked) setEnableSearch(false);
-                    }}
-                    className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
-                  />
-                  <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-slate-300 font-medium">Maps Grounding</span>
-                </label>
-
-                <label className="flex items-center gap-1.5 cursor-pointer bg-[#0B1120] px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={enableSearch}
-                    onChange={(e) => {
-                      setEnableSearch(e.target.checked);
-                      if (e.target.checked) setEnableMaps(false);
-                    }}
-                    className="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0"
-                  />
-                  <Search className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-slate-300 font-medium">Search Grounding</span>
-                </label>
-
-                <label className="flex items-center gap-1.5 cursor-pointer bg-[#0B1120] px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={thinkingMode}
-                    onChange={(e) => setThinkingMode(e.target.checked)}
-                    className="rounded bg-slate-800 border-slate-700 text-purple-500 focus:ring-0"
-                  />
-                  <Brain className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="text-slate-300 font-medium">Deep Thinking Mode</span>
-                </label>
+              <div className="w-full space-y-1.5" aria-live="polite">
+                <p className="font-semibold text-cyan-300">
+                  {modelReady ? 'On-device model ready' : 'On-device model • first-use download'}
+                </p>
+                <p className="text-slate-400">
+                  Chat stays in this browser. The first chat downloads about 0.33 GB once; no live Maps or web search is available here.
+                </p>
+                {isLoading && !modelReady && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between gap-2 text-slate-300">
+                      <span>{modelProgress.text}</span>
+                      <span>{modelProgress.progress}%</span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label="Downloading the on-device assistant model"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={modelProgress.progress}
+                      className="h-1.5 overflow-hidden rounded-full bg-slate-800"
+                    >
+                      <div
+                        className="h-full rounded-full bg-cyan-400 transition-[width] duration-300"
+                        style={{ width: `${Math.max(modelProgress.progress, 3)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <p className="text-slate-500">
+                  Optional voice tools, skin scanning, and medicine verification still use configured external services.
+                </p>
               </div>
-
             </div>
 
             {/* Quick Prompt Suggestions */}
@@ -1066,10 +920,11 @@ export const AiAssistantPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>MediTrust AI Clinical Assistant</span>
-                      {thinkingMode && <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[10px] font-mono border border-purple-500/30">Thinking Mode Active</span>}
+                      <span>MediTrust Healthcare Information Assistant</span>
                     </div>
-                    <div className="text-[10px] text-emerald-400 font-mono">Multi-Turn Gemini Model • {selectedLanguage} Script Enforced</div>
+                    <div className="text-[10px] text-emerald-400 font-mono">
+                      On-device model • {modelReady ? 'Ready' : 'loads on first chat'} • {selectedLanguage}
+                    </div>
                   </div>
                 </div>
 
@@ -1127,7 +982,7 @@ export const AiAssistantPage: React.FC = () => {
                           </button>
                         </div>
                       ) : msg.sender === 'ai' && msg.text === '' ? (
-                        <TypingIndicator thinkingMode={thinkingMode} language={selectedLanguage} />
+                        <TypingIndicator modelReady={modelReady} language={selectedLanguage} />
                       ) : (
                         <div className="prose prose-invert max-w-none text-xs sm:text-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-strong:text-cyan-300 relative">
                           <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -1210,7 +1065,7 @@ export const AiAssistantPage: React.FC = () => {
                     <div className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     </div>
-                    <span className="font-mono text-cyan-400 text-[11px]">Evaluating clinical query & generating response in {selectedLanguage}...</span>
+                    <span className="font-mono text-cyan-400 text-[11px]">Generating an on-device response in {selectedLanguage}...</span>
                   </div>
                 )}
 
@@ -1566,7 +1421,7 @@ export const AiAssistantPage: React.FC = () => {
                     <span>MediTrust AI Assistant</span>
                     <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
-                  <div className="text-[10px] text-cyan-300 font-mono">Online • Gemini Clinical Model</div>
+                  <div className="text-[10px] text-cyan-300 font-mono">Chat runs on your device</div>
                 </div>
               </div>
 
@@ -1582,7 +1437,7 @@ export const AiAssistantPage: React.FC = () => {
             {/* Bubble Content Body */}
             <div className="mt-3.5 space-y-2.5">
               <div className="p-3 rounded-2xl bg-[#0B1120] border border-slate-800/80 text-xs text-slate-300 leading-relaxed">
-                👋 <strong className="text-white">Hello{user?.name ? ` ${user.name}` : ''}!</strong> Welcome to your AI Healthcare Assistant. Ask me about your health symptoms, medicines, or doctors in your city!
+                👋 <strong className="text-white">Hello{user?.name ? ` ${user.name}` : ''}!</strong> Welcome to your on-device healthcare information assistant. Ask general health questions, or use MediTrust search pages for provider listings.
               </div>
 
               <div className="flex items-center gap-2">

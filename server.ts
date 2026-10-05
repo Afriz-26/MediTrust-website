@@ -3,7 +3,6 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
-import { ConversationService } from './server/services/ConversationService';
 import { ImageAnalysisService } from './server/services/ImageAnalysisService';
 import { MedicineService } from './server/services/MedicineService';
 import { DoctorSearchService } from './server/services/DoctorSearchService';
@@ -217,7 +216,7 @@ Return ONLY valid JSON matching this schema:
 }`;
 
       const aiResponse = await aiClient.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           temperature: 0.1,
@@ -370,46 +369,11 @@ Return ONLY valid JSON matching this schema:
     }
   });
 
-  // Streaming SSE Endpoint for sub-second character typing animation
-  app.post('/api/gemini/stream', async (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders?.();
-
-    try {
-      const {
-        messages = [],
-        language = 'English',
-        model = 'gemini-2.5-flash',
-        enableSearch = false,
-        enableMaps = false
-      } = req.body;
-      
-      for await (const token of ConversationService.generateStreamResponse(messages, language, model, { enableSearch, enableMaps })) {
-        res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
-      }
-
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-    } catch (err: any) {
-      const errorMessage = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
-      const errorStatus = err?.status || err?.code || '';
-      const errorDetails = err?.response?.data || err?.error || err?.response || '';
-      console.error(`[SSE Stream Error] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
-      const userMessage = messages.filter((entry: any) => entry?.role === 'user').pop()?.content || '';
-      const providerNotice = Number(errorStatus) === 429 || /RESOURCE_EXHAUSTED|quota/i.test(errorMessage)
-        ? '**Gemini is temporarily unavailable because its usage quota has been reached.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.'
-        : Number(errorStatus) === 503 || /UNAVAILABLE|high demand|overloaded/i.test(errorMessage)
-          ? '**Gemini is temporarily busy.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.'
-          : '**Gemini is temporarily unavailable.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.';
-      const fallbackText = generateSmartClinicalFallback(userMessage, messages.slice(0, -1), req.body?.language || 'English');
-      res.write(`data: ${JSON.stringify({ text: `${providerNotice}\n\n${fallbackText}` })}\n\n`);
-      res.write('data: [DONE]\n\n');
-      res.end();
-    }
+  app.post('/api/gemini/stream', (_req, res) => {
+    res.status(410).json({
+      error: "Text chat now runs in the visitor's browser.",
+      code: 'CHAT_MOVED_ON_DEVICE',
+    });
   });
 
   // Detailed Scan Endpoint (Prescriptions, Medicines, Skin photos, Lab reports)
@@ -551,132 +515,11 @@ To assess your headache better, **could you share:**
   return `The live AI service is unavailable, and I don’t have a matching entry for that question in the offline reference. I don’t want to guess.\n\nPlease try asking about a medicine name, fever, headache, cough or sore throat, blood pressure, diabetes, or finding a doctor. For symptom guidance, include the person's age, symptoms, and how long they have been present. For urgent symptoms, contact emergency services.`;
 }
 
-  // 1. AI Assistant Chat Endpoint (Support Grounded Search, Maps, and Thinking Mode)
-  app.post('/api/gemini/chat', async (req, res) => {
-    try {
-      const { message, history = [], enableSearch = false, enableMaps = false, thinkingMode = false, language = 'English' } = req.body;
-
-      if (!message || typeof message !== 'string') {
-        res.status(400).json({ error: 'Message text is required' });
-        return;
-      }
-
-      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        // Fallback clinical response if key is missing
-        res.json({
-          text: generateSmartClinicalFallback(message, history, language),
-          groundingChunks: [],
-          thinkingUsed: false
-        });
-        return;
-      }
-
-      const ai = getGeminiClient();
-
-      const languagePrompts: Record<string, string> = {
-        'Telugu (తెలుగు)': 'CRITICAL MANDATE: Formulate your ENTIRE response strictly in Telugu language (తెలుగు లిపి) using natural Telugu script and clinical vocabulary. Do NOT output in English or Roman script.',
-        'Hindi (हिंदी)': 'CRITICAL MANDATE: Formulate your ENTIRE response strictly in Hindi language (हिंदी देवनागरी లిపి) using Devanagari script. Do NOT output in English.',
-        'Tamil (தமிழ்)': 'CRITICAL MANDATE: Formulate your ENTIRE response strictly in Tamil language (தமிழ்) using Tamil script. Do NOT output in English.',
-        'Kannada (ಕನ್ನಡ)': 'CRITICAL MANDATE: Formulate your ENTIRE response strictly in Kannada language (ಕನ್ನಡ) using Kannada script. Do NOT output in English.',
-        'Malayalam (മലയാളം)': 'CRITICAL MANDATE: Formulate your ENTIRE response strictly in Malayalam language (മലയാളം) using Malayalam script. Do NOT output in English.',
-        'English': 'Respond in clear, professional English.'
-      };
-
-      const langRule = languagePrompts[language] || `Formulate your ENTIRE response strictly in ${language}.`;
-
-      const systemInstruction = `You are MediTrust AI, an empathetic, highly accurate clinical assistant built for the MediTrust Healthcare Platform by Medynex Solutions LLP.
-${langRule}
-Selected Language: ${language}.
-Your primary role is to assist patients with symptom triage, medical education, doctor/hospital discovery, medicine details, and healthcare guidance.
-Always format your response with structured Markdown using bullet points, bold key terms, numbered steps, and clean paragraphs.
-Always maintain a caring, professional, trustworthy tone. Always remind users that AI guidance does not replace an in-person clinical diagnosis or emergency care.
-If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupati, Hyderabad, Chennai, Bangalore, etc.), provide clear, helpful recommendations.`;
-
-      if (thinkingMode) {
-        // Use the higher-capability model for complex triage requests.
-        const response = await withRetry(async () => {
-          return await ai.models.generateContent({
-            model: 'gemini-2.5-pro',
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: `${systemInstruction}\n\nPatient Query with Complex Triage Request: ${message}` }]
-              }
-            ]
-          });
-        }, { 
-          maxRetries: 2,
-          onRetry: (err, attempt, delayMs) => {
-            console.warn(`[Gemini Thinking Chat Retry ${attempt}/2] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
-          }
-        });
-
-        res.json({
-          text: response.text || generateSmartClinicalFallback(message, history, language),
-          groundingChunks: [],
-          thinkingUsed: true
-        });
-        return;
-      }
-
-      // Configure tools based on flags
-      const tools: any[] = [];
-      if (enableMaps) {
-        tools.push({ googleMaps: {} });
-      } else if (enableSearch) {
-        tools.push({ googleSearch: {} });
-      }
-
-      const model = 'gemini-2.5-flash';
-
-      const contents: any[] = history.map((item: { sender: string; text: string }) => ({
-        role: item.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: item.text }]
-      }));
-
-      contents.push({
-        role: 'user',
-        parts: [{ text: message }]
-      });
-
-      const response = await withRetry(async () => {
-        return await ai.models.generateContent({
-          model,
-          contents,
-          config: {
-            systemInstruction,
-            tools: tools.length > 0 ? tools : undefined
-          }
-        });
-      }, { 
-        maxRetries: 3,
-        onRetry: (err, attempt, delayMs) => {
-          console.warn(`[Gemini Chat Retry ${attempt}/3] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
-        }
-      });
-
-      // Extract Grounding Chunks if available
-      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-
-      res.json({
-        text: response.text || generateSmartClinicalFallback(message, history, language),
-        groundingChunks,
-        thinkingUsed: false
-      });
-
-    } catch (err: any) {
-      const errorMessage = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
-      const errorStatus = err?.status || err?.code || '';
-      const errorDetails = err?.response?.data || err?.error || err?.response || '';
-      console.error(`[Error in /api/gemini/chat] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      res.json({ 
-        text: generateSmartClinicalFallback(req.body.message || '', req.body.history || [], req.body.language || 'English'),
-        groundingChunks: [],
-        thinkingUsed: false,
-        error: errorMessage
-      });
-    }
+  app.post('/api/gemini/chat', (_req, res) => {
+    res.status(410).json({
+      error: "Text chat now runs in the visitor's browser.",
+      code: 'CHAT_MOVED_ON_DEVICE',
+    });
   });
 
   // 2. Multimodal Skin Scanner Endpoint (Gemini Vision)

@@ -61,6 +61,24 @@ const moreToExplore = [
     description: 'Meet the platform and the team building it.',
     href: '/about-meditrust',
     icon: HeartHandshake
+  },
+  {
+    title: 'About Medynex',
+    description: 'Learn about the company behind the MediTrust platform.',
+    href: '/about-medynex',
+    icon: HeartHandshake
+  },
+  {
+    title: 'Meet the team',
+    description: 'Get to know the people working on MediTrust.',
+    href: '/team',
+    icon: HeartHandshake
+  },
+  {
+    title: 'Our services',
+    description: 'Explore healthcare search and platform services.',
+    href: '/services',
+    icon: Stethoscope
   }
 ];
 
@@ -117,7 +135,7 @@ export const HomePage: React.FC = () => (
           Get to know MediTrust.
         </h2>
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {moreToExplore.map((item) => {
           const Icon = item.icon;
           return (

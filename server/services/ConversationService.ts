@@ -69,7 +69,7 @@ ${langRule}`;
   public static async *generateStreamResponse(
     messages: ChatMessage[] = [],
     language: string = 'English',
-    modelName: string = 'gemini-2.5-flash',
+    modelName: string = 'gemini-3.8-flash',
     grounding: { enableSearch?: boolean; enableMaps?: boolean } = {}
   ): AsyncGenerator<string, void, unknown> {
     const ai = this.getAiClient();
@@ -146,7 +146,7 @@ ${langRule}`;
     }
 
     try {
-      const validModel = modelName.includes('pro') ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+      const validModel = 'gemini-3.8-flash';
       const tools = grounding.enableMaps
         ? [{ googleMaps: {} }]
         : grounding.enableSearch
@@ -154,25 +154,11 @@ ${langRule}`;
           : undefined;
 
       const responseStream = await withRetry(
-        async () => {
-          try {
-            return await ai.models.generateContentStream({
-              model: validModel,
-              contents,
-              config: tools ? { tools } : undefined
-            });
-          } catch (mErr: any) {
-            if (validModel !== 'gemini-2.5-flash') {
-              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-2.5-flash.`);
-              return await ai.models.generateContentStream({
-                model: 'gemini-2.5-flash',
-                contents,
-                config: tools ? { tools } : undefined
-              });
-            }
-            throw mErr;
-          }
-        },
+        () => ai.models.generateContentStream({
+          model: validModel,
+          contents,
+          config: tools ? { tools } : undefined
+        }),
         {
           maxRetries: 1,
           initialDelayMs: 400,
