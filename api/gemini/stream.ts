@@ -9,44 +9,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache, no-transform, no-store');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no');
-
-  if (typeof (res as any).flushHeaders === 'function') {
-    (res as any).flushHeaders();
-  }
-
   try {
     let body: any = req.body;
     if (typeof body === 'string') {
       try {
         body = JSON.parse(body);
       } catch {
-        body = {};
+        res.status(400).json({ error: 'Request body must be valid JSON' });
+        return;
       }
     } else if (Buffer.isBuffer(body)) {
       try {
         body = JSON.parse(body.toString('utf-8'));
       } catch {
-        body = {};
+        res.status(400).json({ error: 'Request body must be valid JSON' });
+        return;
       }
     }
     body = body || {};
 
     const rawMessages = body.messages;
     const messages = Array.isArray(rawMessages)
-      ? rawMessages.map((m: any) => ({
-          role: (m?.role === 'user' ? 'user' : 'model') as 'user' | 'model',
-          content: typeof m?.content === 'string' ? m.content : typeof m?.text === 'string' ? m.text : ''
-        }))
+      ? rawMessages.flatMap((message: any) => {
+          const content = typeof message?.content === 'string'
+            ? message.content
+            : typeof message?.text === 'string'
+              ? message.text
+              : '';
+          if (!content.trim()) return [];
+          return [{
+            role: (message?.role === 'user' || message?.sender === 'user' ? 'user' : 'model') as 'user' | 'model',
+            content
+          }];
+        })
       : [];
 
-    const language = typeof body.language === 'string' ? body.language : 'English';
-    const model = typeof body.model === 'string' ? body.model : 'gemini-3.7-flash';
+    if (!messages.some((message: { role: string }) => message.role === 'user')) {
+      res.status(400).json({ error: 'A user message is required' });
+      return;
+    }
 
-    for await (const token of ConversationService.generateStreamResponse(messages, language, model)) {
+    const language = typeof body.language === 'string' ? body.language : 'English';
+    const model = typeof body.model === 'string' ? body.model : 'gemini-2.5-flash';
+    const grounding = {
+      enableSearch: body.enableSearch === true,
+      enableMaps: body.enableMaps === true
+    };
+
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform, no-store');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    for await (const token of ConversationService.generateStreamResponse(messages, language, model, grounding)) {
       res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
     }
 
@@ -54,9 +73,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.end();
   } catch (err: any) {
     const errorMessage = err?.message || (typeof err === 'string' ? err : 'Stream error occurred');
-    console.error(`[SSE Stream Error in Vercel function]`, errorMessage);
-    res.write(`data: ${JSON.stringify({ text: `\n\n*(Notice: Clinical assistant encountered a temporary server error: ${errorMessage}. Please check your connection or try again shortly.)*` })}\n\n`);
-    res.write('data: [DONE]\n\n');
-    res.end();
+    console.error('[SSE Stream Error in Vercel function]', errorMessage, err?.response?.data || err?.error || '');
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: 'Assistant service is temporarily unavailable', status: 502 })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+      return;
+    }
+    res.status(502).json({ error: 'Assistant service is temporarily unavailable', code: 'AI_PROVIDER_UNAVAILABLE' });
   }
 }

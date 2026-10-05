@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { ConversationService } from './server/services/ConversationService';
 import { ImageAnalysisService } from './server/services/ImageAnalysisService';
 import { MedicineService } from './server/services/MedicineService';
@@ -382,7 +382,7 @@ Return ONLY valid JSON matching this schema:
       const {
         messages = [],
         language = 'English',
-        model = 'gemini-3.8-flash',
+        model = 'gemini-2.5-flash',
         enableSearch = false,
         enableMaps = false
       } = req.body;
@@ -594,35 +594,17 @@ Always maintain a caring, professional, trustworthy tone. Always remind users th
 If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupati, Hyderabad, Chennai, Bangalore, etc.), provide clear, helpful recommendations.`;
 
       if (thinkingMode) {
-        // Use gemini-3.8-flash with High Thinking Level for deep clinical reasoning
+        // Use the higher-capability model for complex triage requests.
         const response = await withRetry(async () => {
-          try {
-            return await ai.models.generateContent({
-              model: 'gemini-3.8-flash',
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: `${systemInstruction}\n\nPatient Query with Complex Triage Request: ${message}` }]
-                }
-              ],
-              config: {
-                thinkingConfig: {
-                  thinkingLevel: ThinkingLevel.HIGH
-                }
+          return await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemInstruction}\n\nPatient Query with Complex Triage Request: ${message}` }]
               }
-            });
-          } catch (tErr: any) {
-            console.warn(`[Gemini Thinking Chat] Fallback to standard 3.8-flash: ${tErr?.message}`);
-            return await ai.models.generateContent({
-              model: 'gemini-3.8-flash',
-              contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: `${systemInstruction}\n\nPatient Query with Complex Triage Request: ${message}` }]
-                }
-              ]
-            });
-          }
+            ]
+          });
         }, { 
           maxRetries: 2,
           onRetry: (err, attempt, delayMs) => {
@@ -646,7 +628,7 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
         tools.push({ googleSearch: {} });
       }
 
-      const model = 'gemini-3.8-flash';
+      const model = 'gemini-2.5-flash';
 
       const contents: any[] = history.map((item: { sender: string; text: string }) => ({
         role: item.sender === 'user' ? 'user' : 'model',

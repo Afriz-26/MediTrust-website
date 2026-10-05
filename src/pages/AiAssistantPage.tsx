@@ -726,7 +726,7 @@ export const AiAssistantPage: React.FC = () => {
         {
           messages: updatedHistory.filter(m => !m.isError).map(m => ({ role: m.sender === 'user' ? 'user' : 'model', content: m.text })),
           language: selectedLanguage,
-          model: thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash',
+          model: thinkingMode ? 'gemini-2.5-pro' : 'gemini-2.5-flash',
           enableSearch,
           enableMaps
         },
@@ -753,7 +753,7 @@ export const AiAssistantPage: React.FC = () => {
               message: query,
               history: updatedHistory.slice(0, -1),
               language: selectedLanguage,
-              model: thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash',
+              model: thinkingMode ? 'gemini-2.5-pro' : 'gemini-2.5-flash',
               enableSearch,
               enableMaps
             })
@@ -771,10 +771,12 @@ export const AiAssistantPage: React.FC = () => {
           console.error('Fallback chat API also failed:', fallbackErr);
         }
 
-        const errorDetail = err?.message || 'Server connection error';
+        console.error('Assistant request failed:', err);
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
           ...msg,
-          text: accumulatedText || `I am temporarily unable to reach the Gemini server (${errorDetail}). Please verify your GEMINI_API_KEY is configured in Vercel settings and try again.`,
+          text: accumulatedText
+            ? `${accumulatedText}\n\nThe assistant service is temporarily unavailable. Please try again shortly.`
+            : 'The assistant service is temporarily unavailable. Please try again shortly. For urgent symptoms, contact emergency services.',
           isError: true
         } : msg));
       }

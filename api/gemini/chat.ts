@@ -26,16 +26,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     body = body || {};
 
-    const { message = '', history = [], language = 'English', model = 'gemini-3.7-flash' } = body;
+    const { message = '', history = [], language = 'English', model = 'gemini-2.5-flash' } = body;
+    if (typeof message !== 'string' || !message.trim()) {
+      res.status(400).json({ error: 'Message text is required' });
+      return;
+    }
 
     const safeHistory = Array.isArray(history) ? history : [];
     const messages = [
-      ...safeHistory.map((h: any) => ({ role: h?.sender === 'user' ? ('user' as const) : ('model' as const), content: h?.text || '' })),
-      { role: 'user' as const, content: typeof message === 'string' ? message : '' }
+      ...safeHistory.flatMap((item: any) => {
+        const content = typeof item?.text === 'string'
+          ? item.text
+          : typeof item?.content === 'string'
+            ? item.content
+            : '';
+        if (!content.trim()) return [];
+        return [{
+          role: item?.sender === 'user' || item?.role === 'user' ? ('user' as const) : ('model' as const),
+          content
+        }];
+      }),
+      { role: 'user' as const, content: message }
     ];
 
     let fullText = '';
-    for await (const token of ConversationService.generateStreamResponse(messages, language, model)) {
+    for await (const token of ConversationService.generateStreamResponse(messages, language, model, {
+      enableSearch: body.enableSearch === true,
+      enableMaps: body.enableMaps === true
+    })) {
       fullText += token;
     }
 
@@ -46,11 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: any) {
     const errorMessage = err?.message || (typeof err === 'string' ? err : 'Error processing request');
-    console.error(`[Error in /api/gemini/chat Vercel function]`, errorMessage);
-    res.status(200).json({
-      text: `\n\n*(Notice: Clinical assistant encountered a temporary server error: ${errorMessage}. Please try again shortly.)*`,
-      groundingChunks: [],
-      thinkingUsed: false
-    });
+    console.error('[Error in /api/gemini/chat Vercel function]', errorMessage, err?.response?.data || err?.error || '');
+    res.status(502).json({ error: 'Assistant service is temporarily unavailable', code: 'AI_PROVIDER_UNAVAILABLE' });
   }
 }

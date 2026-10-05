@@ -50,10 +50,26 @@ CORE CLINICAL SAFETY PROTOCOLS:
 ${langRule}`;
   }
 
+  private static getOfflineResponse(
+    lastUserMsg: string,
+    foundMed: ReturnType<typeof MedicineService.search>,
+    foundTopic: ReturnType<typeof MedicalKnowledgeService.searchKnowledge>
+  ): string {
+    if (foundMed) {
+      return `### 💊 Clinical Details: **${foundMed.name}**\n\n- **Brand Names in India:** ${foundMed.brandNames.join(', ')}\n- **Pharmacological Class:** ${foundMed.drugClass}\n- **Primary Indications:** ${foundMed.uses}\n- **Standard Dosage:** ${foundMed.dosageRanges}\n- **Common Side Effects:** ${foundMed.commonSideEffects.join(', ')}\n\n⚠️ **Important Precautions:**\n- Pregnancy: ${foundMed.precautions.pregnancy}\n- Kidney/Renal: ${foundMed.precautions.kidney}\n- Liver: ${foundMed.precautions.liver}\n\n*Always consult your certified doctor or pharmacist before starting or modifying dosages.*`;
+    }
+
+    if (foundTopic) {
+      return `### 🩺 Healthcare Guidance: **${foundTopic.title}**\n\n${foundTopic.overview}\n\n**Common Clinical Symptoms:**\n${foundTopic.symptoms.map(s => `- ${s}`).join('\n')}\n\n**Standard Treatment Approaches:**\n${foundTopic.treatmentOptions.map(t => `- ${t}`).join('\n')}\n\n**Lifestyle & Recovery Tips:**\n${foundTopic.lifestyleManagement.map(l => `- ${l}`).join('\n')}`;
+    }
+
+    return `The local reference doesn't have a verified answer for **"${lastUserMsg || 'that question'}"**, so I don't want to guess. Please try a question about a medicine or a health topic in the MediTrust reference, or search for a local care provider.`;
+  }
+
   public static async *generateStreamResponse(
     messages: ChatMessage[] = [],
     language: string = 'English',
-    modelName: string = 'gemini-3.8-flash',
+    modelName: string = 'gemini-2.5-flash',
     grounding: { enableSearch?: boolean; enableMaps?: boolean } = {}
   ): AsyncGenerator<string, void, unknown> {
     const ai = this.getAiClient();
@@ -124,20 +140,13 @@ ${langRule}`;
     }
 
     if (!ai) {
-      // Fast Intelligent Structured Fallback
-      if (foundMed) {
-        yield `### 💊 Clinical Details: **${foundMed.name}**\n\n- **Brand Names in India:** ${foundMed.brandNames.join(', ')}\n- **Pharmacological Class:** ${foundMed.drugClass}\n- **Primary Indications:** ${foundMed.uses}\n- **Standard Dosage:** ${foundMed.dosageRanges}\n- **Common Side Effects:** ${foundMed.commonSideEffects.join(', ')}\n\n⚠️ **Important Precautions:**\n- Pregnancy: ${foundMed.precautions.pregnancy}\n- Kidney/Renal: ${foundMed.precautions.kidney}\n- Liver: ${foundMed.precautions.liver}\n\n*Always consult your certified doctor or pharmacist before starting or modifying dosages.*`;
-      } else if (foundTopic) {
-        yield `### 🩺 Healthcare Guidance: **${foundTopic.title}**\n\n${foundTopic.overview}\n\n**Common Clinical Symptoms:**\n${foundTopic.symptoms.map(s => `- ${s}`).join('\n')}\n\n**Standard Treatment Approaches:**\n${foundTopic.treatmentOptions.map(t => `- ${t}`).join('\n')}\n\n**Lifestyle & Recovery Tips:**\n${foundTopic.lifestyleManagement.map(l => `- ${l}`).join('\n')}`;
-      } else {
-        yield `Thank you for consulting **MediTrust AI Clinical Assistant**.\n\nRegarding your query about **"${lastUserMsg || 'healthcare guidance'}"**:\n\n### 📋 Clinical Overview:\n- **Primary Consideration:** Healthcare queries benefit from structured evaluation, considering symptom duration, medical history, and current medications.\n- **Guidance:** Ensure adequate hydration, proper rest, and regular health monitoring.\n\n---\n\n### 🩺 What would you like to do next?\n1. **Find Doctors:** Search OPD token availability in Tirupati, Hyderabad, or your city.\n2. **Ask Follow-up Questions:** Provide details on symptoms, duration, or age.\n3. **Verify Medicine:** Scan your prescription or search medicine details & dosages.`;
-      }
+      yield `**Live AI is unavailable, so I'm using MediTrust's limited offline reference.**\n\n${this.getOfflineResponse(lastUserMsg, foundMed, foundTopic)}`;
       yield SafetyLayer.getDisclaimerBanner(language);
       return;
     }
 
     try {
-      const validModel = modelName.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
+      const validModel = modelName.includes('pro') ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
       const tools = grounding.enableMaps
         ? [{ googleMaps: {} }]
         : grounding.enableSearch
@@ -153,10 +162,10 @@ ${langRule}`;
               config: tools ? { tools } : undefined
             });
           } catch (mErr: any) {
-            if (validModel !== 'gemini-3.8-flash') {
-              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-3.8-flash.`);
+            if (validModel !== 'gemini-2.5-flash') {
+              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-2.5-flash.`);
               return await ai.models.generateContentStream({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-2.5-flash',
                 contents,
                 config: tools ? { tools } : undefined
               });
@@ -184,7 +193,9 @@ ${langRule}`;
       const errorStatus = err?.status || err?.code || '';
       const errorDetails = err?.response?.data || err?.error || err?.response || '';
       console.error(`[Gemini API Stream Error] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      throw err;
+      yield `**Live AI is temporarily unavailable, so I'm using MediTrust's limited offline reference.**\n\n${this.getOfflineResponse(lastUserMsg, foundMed, foundTopic)}\n\n`;
+      yield SafetyLayer.getDisclaimerBanner(language);
+      return;
     }
 
     // Append disclaimer if not present

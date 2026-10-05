@@ -11,7 +11,7 @@ MediTrust is a healthcare discovery platform for finding doctors, hospitals, pha
 3. Set `GEMINI_API_KEY` in `.env.local` to your Gemini API key. This is a server-only secret; do not add a `VITE_` prefix or commit the file.
 4. Start the app with `npm run dev`.
 
-The server loads `.env.local` first, then `.env`. Without a Gemini key, or while Gemini is rate-limited or temporarily unavailable, the assistant shows a notice and uses its built-in healthcare guidance fallback. General generative answers require a working Gemini key and available provider quota.
+The server loads `.env.local` first, then `.env`. For Vercel deployments, add `GEMINI_API_KEY` in **Project Settings → Environment Variables** for the environments you deploy, then redeploy. Without a Gemini key, or while Gemini is rate-limited or temporarily unavailable, the assistant uses its limited local healthcare reference and clearly identifies that fallback. General generative answers require a working Gemini key and available provider quota.
 
 ## Search and listings
 

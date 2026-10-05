@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Building2, HeartHandshake, Pill, Stethoscope } from 'lucide-react';
+import { ArrowRight, BookOpen, Building2, FlaskConical, HeartHandshake, Pill, Stethoscope } from 'lucide-react';
 import { HealthcareHero } from '../components/home/HealthcareHero';
 import { SEO } from '../components/common/SEO';
 import { HOMEPAGE_KEYWORDS } from '../lib/seo';
@@ -33,6 +33,34 @@ const careOptions = [
     href: '/medicines',
     icon: Pill,
     tone: 'bg-[#f2eef6] text-[#76588a]'
+  },
+  {
+    title: 'Find a diagnostic lab',
+    description: 'Explore diagnostic laboratories and open nearby listings in Maps.',
+    href: '/labs',
+    icon: FlaskConical,
+    tone: 'bg-[#eef2f7] text-[#4d6585]'
+  }
+];
+
+const moreToExplore = [
+  {
+    title: 'How MediTrust works',
+    description: 'Learn how to explore healthcare information and local listings.',
+    href: '/how-it-works',
+    icon: BookOpen
+  },
+  {
+    title: 'Health guides and updates',
+    description: 'Browse health education articles and MediTrust updates.',
+    href: '/blog',
+    icon: BookOpen
+  },
+  {
+    title: 'About MediTrust',
+    description: 'Meet the platform and the team building it.',
+    href: '/about-meditrust',
+    icon: HeartHandshake
   }
 ];
 
@@ -59,7 +87,7 @@ export const HomePage: React.FC = () => (
         </p>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {careOptions.map((option) => {
           const Icon = option.icon;
           return (
@@ -75,6 +103,38 @@ export const HomePage: React.FC = () => (
               <p className="mt-2 min-h-12 text-sm leading-6 text-[#6d7b71]">{option.description}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#33734e]">
                 Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+
+    <section className="mx-auto max-w-7xl px-5 pb-16 sm:px-8 lg:px-10 lg:pb-20">
+      <div className="max-w-xl">
+        <p className="text-sm font-bold uppercase tracking-[0.15em] text-[#548064]">More to explore</p>
+        <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-[#20372a] sm:text-3xl">
+          Get to know MediTrust.
+        </h2>
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {moreToExplore.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              className="group flex min-h-28 items-start gap-4 rounded-2xl border border-[#e3e9e3] bg-white p-5 transition-colors hover:border-[#b9d0bd] hover:bg-[#f8fbf8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27714d]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#edf4ed] text-[#28714d]">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block font-semibold text-[#263d2e]">{item.title}</span>
+                <span className="mt-1 block text-sm leading-6 text-[#6d7b71]">{item.description}</span>
+                <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#33734e]">
+                  Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
               </span>
             </Link>
           );
