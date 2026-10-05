@@ -110,9 +110,14 @@ export class MedicalKnowledgeService {
     if (!q) return null;
 
     for (const topic of VERIFIED_KNOWLEDGE_BASE) {
-      if (topic.title.toLowerCase().includes(q) || topic.category.toLowerCase().includes(q)) return topic;
-      for (const s of topic.symptoms) {
-        if (s.toLowerCase().includes(q)) return topic;
+      const searchableText = [topic.title, topic.category, ...topic.symptoms]
+        .map(value => value.toLowerCase());
+      const terms = searchableText.flatMap(value =>
+        value.split(/[^a-z0-9]+/).filter(term => term.length >= 4)
+      );
+      if (searchableText.some(value => value.includes(q)) ||
+          terms.some(term => q.includes(term) || (q.length >= 5 && term.includes(q)))) {
+        return topic;
       }
     }
     return null;

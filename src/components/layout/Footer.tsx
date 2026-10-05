@@ -166,14 +166,14 @@ export const Footer: React.FC = () => {
               <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block mb-2">Connect With Us:</span>
               <div className="flex items-center space-x-2">
                 <a 
-                  href="https://linkedin.com/in/shaik-afriz-a49311385" 
+                  href="https://www.linkedin.com/in/shaik-afriz-a49311385" 
                   target="_blank" rel="noreferrer" aria-label="LinkedIn"
                   className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-blue-600 border border-slate-700 transition-colors"
                 >
                   <Linkedin className="w-3.5 h-3.5" />
                 </a>
                 <a 
-                  href="https://github.com/shaik-afriz" 
+                  href="https://github.com/" 
                   target="_blank" rel="noreferrer" aria-label="GitHub"
                   className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors"
                 >

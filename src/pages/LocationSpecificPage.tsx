@@ -1,8 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MOCK_DOCTORS, MOCK_HOSPITALS, MOCK_PHARMACIES } from '../lib/api';
-import { MapPin, Stethoscope, Building2, Pill, Star, Clock, ArrowRight, ShieldCheck, Phone, Compass, CheckCircle2 } from 'lucide-react';
+import { MapPin, Stethoscope, Building2, Pill, ArrowRight } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
+import { getGoogleMapsSearchUrl } from '../lib/googleMaps';
 
 interface LocationSpecificPageProps {
   type: 'doctors' | 'hospitals' | 'pharmacies';
@@ -23,27 +23,6 @@ export const LocationSpecificPage: React.FC<LocationSpecificPageProps> = ({ type
   const info = typeLabels[type];
   const IconComponent = info.icon;
 
-  // Filter mock items by city keyword or show fallback list
-  const filteredDoctors = MOCK_DOCTORS.filter(d => 
-    (d.location && d.location.toLowerCase().includes(cityName.toLowerCase())) || 
-    (d.hospitalName && d.hospitalName.toLowerCase().includes(cityName.toLowerCase())) ||
-    (d.city && d.city.toLowerCase().includes(cityName.toLowerCase()))
-  );
-  const displayDoctors = filteredDoctors.length > 0 ? filteredDoctors : MOCK_DOCTORS;
-
-  const filteredHospitals = MOCK_HOSPITALS.filter(h => 
-    (h.city && h.city.toLowerCase().includes(cityName.toLowerCase())) || 
-    (h.address && h.address.toLowerCase().includes(cityName.toLowerCase())) ||
-    (h.location && h.location.toLowerCase().includes(cityName.toLowerCase()))
-  );
-  const displayHospitals = filteredHospitals.length > 0 ? filteredHospitals : MOCK_HOSPITALS;
-
-  const filteredPharmacies = MOCK_PHARMACIES.filter(p => 
-    (p.city && p.city.toLowerCase().includes(cityName.toLowerCase())) || 
-    (p.address && p.address.toLowerCase().includes(cityName.toLowerCase()))
-  );
-  const displayPharmacies = filteredPharmacies.length > 0 ? filteredPharmacies : MOCK_PHARMACIES;
-
   const locationSchema = {
     '@context': 'https://schema.org',
     '@type': 'MedicalBusiness',
@@ -53,7 +32,7 @@ export const LocationSpecificPage: React.FC<LocationSpecificPageProps> = ({ type
       'addressLocality': cityName,
       'addressCountry': 'IN'
     },
-    'description': `Verified list of ${type} in ${cityName} powered by Medynex Solutions LLP.`
+    'description': `Search ${type} in ${cityName} with MediTrust.`
   };
 
   const locationKeywords = [
@@ -67,8 +46,8 @@ export const LocationSpecificPage: React.FC<LocationSpecificPageProps> = ({ type
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-12 lg:py-20">
       <SEO
-        title={`${info.title} | Book Online & Check Live Queue – MediTrust`}
-        description={`Find top-rated verified ${type} in ${cityName}. Compare consultation fees, check real-time OPD queue tokens, 24/7 emergency care, and digital medicine delivery in ${cityName}.`}
+        title={`${info.title} | MediTrust`}
+        description={`Search ${type} in ${cityName} with MediTrust and open current local listings in Google Maps.`}
         keywords={locationKeywords}
         canonicalUrl={`https://medynex.com/${type}/in/${cityName.toLowerCase()}`}
         schema={locationSchema}
@@ -93,12 +72,22 @@ export const LocationSpecificPage: React.FC<LocationSpecificPageProps> = ({ type
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Top Verified <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">{info.title}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">{info.title}</span>
           </h1>
 
           <p className="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed">
-            Discover trusted general physicians, specialists, emergency care centers, and pharmacies in {cityName} with live OPD queue updates, instant digital bookings, and e-prescription support.
+            Search local healthcare listings in {cityName}. Google Maps provides current places; confirm provider credentials, hours, and availability directly. MediTrust does not provide booking.
           </p>
+          <a
+            href={getGoogleMapsSearchUrl(`${type === 'doctors' ? 'doctors and clinics' : type} in ${cityName}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition-colors hover:bg-cyan-400"
+          >
+            <MapPin className="h-4 w-4" />
+            Search {type} in {cityName} on Google Maps
+            <ArrowRight className="h-4 w-4" />
+          </a>
 
           {/* Quick Filter Switchers */}
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-800">
@@ -137,116 +126,50 @@ export const LocationSpecificPage: React.FC<LocationSpecificPageProps> = ({ type
 
         {/* Dynamic Items Listing */}
         {type === 'doctors' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayDoctors.map((doc) => (
-              <div key={doc.id} className="rounded-3xl bg-[#111827] border border-slate-800 p-6 flex flex-col justify-between hover:border-cyan-500/40 transition-all shadow-xl space-y-4">
-                <div className="flex items-start gap-4">
-                  <img src={doc.image} alt={doc.name} className="w-16 h-16 rounded-2xl object-cover border border-slate-700" />
-                  <div>
-                    <span className="text-[10px] font-mono font-semibold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
-                      {doc.specialty}
-                    </span>
-                    <h3 className="text-lg font-bold text-white mt-1">{doc.name}</h3>
-                    <p className="text-xs text-slate-400">{doc.qualification}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-500" /> {doc.location}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-y border-slate-800/80 text-xs">
-                  <div className="flex items-center gap-1 text-amber-400 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" /> {doc.rating} ({doc.reviewCount})
-                  </div>
-                  <span className="text-slate-300 font-mono font-semibold">₹{doc.consultationFee} Fee</span>
-                </div>
-
-                <Link
-                  to="/doctors"
-                  className="w-full text-center text-xs font-bold py-2.5 rounded-xl bg-cyan-500 text-slate-950 hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/15"
-                >
-                  Book Appointment in {cityName}
-                </Link>
-              </div>
-            ))}
+          <div className="rounded-3xl bg-[#111827] border border-slate-800 p-8 text-center shadow-xl">
+            <Stethoscope className="mx-auto h-10 w-10 text-cyan-400" />
+            <h2 className="mt-4 text-xl font-bold text-white">Search current local doctor listings</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
+              This page does not display sample doctor profiles. Open Google Maps to search current doctors and clinics in {cityName}; provider details are maintained by Google and the listed businesses.
+            </p>
           </div>
         )}
 
         {type === 'hospitals' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {displayHospitals.map((hosp) => (
-              <div key={hosp.id} className="rounded-3xl bg-[#111827] border border-slate-800 p-6 flex flex-col justify-between hover:border-blue-500/40 transition-all shadow-xl space-y-4">
-                <div className="flex items-start gap-4">
-                  <img src={hosp.image} alt={hosp.name} className="w-20 h-20 rounded-2xl object-cover border border-slate-700" />
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-white">{hosp.name}</h3>
-                    <p className="text-xs text-slate-400 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-blue-400" /> {hosp.address}, {hosp.city}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {hosp.departments.slice(0, 3).map((dept) => (
-                        <span key={dept} className="text-[10px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded-full border border-slate-800">
-                          {dept}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-y border-slate-800/80 text-xs text-slate-300">
-                  <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                    <ShieldCheck className="w-4 h-4" /> ABDM Queue Token Enabled
-                  </span>
-                  <span className="font-mono text-cyan-400">Available Beds: {hosp.availableBeds}</span>
-                </div>
-
-                <Link
-                  to="/hospitals"
-                  className="w-full text-center text-xs font-bold py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20"
-                >
-                  View OPD Live Token Queue
-                </Link>
-              </div>
-            ))}
+          <div className="rounded-3xl bg-[#111827] border border-slate-800 p-8 text-center shadow-xl">
+            <Building2 className="mx-auto h-10 w-10 text-blue-400" />
+            <h2 className="mt-4 text-xl font-bold text-white">Search current hospital listings</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
+              MediTrust does not have live bed availability or OPD queue data. Open Google Maps for current hospital listings in {cityName} and contact the hospital directly to confirm services and capacity.
+            </p>
+            <a
+              href={getGoogleMapsSearchUrl(`hospitals in ${cityName}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+            >
+              Search hospitals on Google Maps
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         )}
 
         {type === 'pharmacies' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayPharmacies.map((pharm) => (
-              <div key={pharm.id} className="rounded-3xl bg-[#111827] border border-slate-800 p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all shadow-xl space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      24/7 Verified Partner
-                    </span>
-                    <span className="text-xs text-amber-400 font-bold flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" /> {pharm.rating}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white">{pharm.name}</h3>
-                  <p className="text-xs text-slate-400 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-500" /> {pharm.address}, {pharm.city}
-                  </p>
-                </div>
-
-                <div className="py-3 border-y border-slate-800/80 text-xs space-y-1.5">
-                  <p className="text-slate-300 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400" /> {pharm.phone}
-                  </p>
-                  <p className="text-slate-400 text-[11px] flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Digital Prescription Pickup Ready
-                  </p>
-                </div>
-
-                <Link
-                  to="/pharmacies"
-                  className="w-full text-center text-xs font-bold py-2.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/15"
-                >
-                  Order Medicines in {cityName}
-                </Link>
-              </div>
-            ))}
+          <div className="rounded-3xl bg-[#111827] border border-slate-800 p-8 text-center shadow-xl">
+            <Pill className="mx-auto h-10 w-10 text-emerald-400" />
+            <h2 className="mt-4 text-xl font-bold text-white">Search current pharmacy listings</h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
+              MediTrust does not show live pharmacy inventory or process orders. Open Google Maps for current local pharmacies and contact them directly to confirm stock, hours, and prices.
+            </p>
+            <a
+              href={getGoogleMapsSearchUrl(`pharmacies in ${cityName}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400"
+            >
+              Search pharmacies on Google Maps
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         )}
 

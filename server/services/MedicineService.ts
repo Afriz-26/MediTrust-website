@@ -146,10 +146,9 @@ export class MedicineService {
     if (!q) return null;
 
     for (const med of VERIFIED_MEDICINE_DATABASE) {
-      if (med.name.toLowerCase().includes(q)) return med;
-      for (const b of med.brandNames) {
-        if (b.toLowerCase().includes(q)) return med;
-      }
+      const names = [med.name, ...med.brandNames].map(name => name.toLowerCase());
+      const searchTerms = names.flatMap(name => [name, ...name.split(/[^a-z0-9]+/).filter(term => term.length >= 4)]);
+      if (searchTerms.some(term => q.includes(term) || (q.length >= 4 && term.includes(q)))) return med;
     }
     return null;
   }

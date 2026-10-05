@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useHealthcare } from '../context/HealthcareContext';
 import { useLocation } from '../context/LocationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Hospital } from '../types';
-import { Building2, MapPin, Phone, ShieldCheck, Activity, Search, AlertCircle, Sparkles, CheckCircle2, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, AlertCircle, Sparkles, CheckCircle2, ExternalLink } from 'lucide-react';
 import { HOSPITAL_SEARCH_KEYWORDS } from '../lib/seo';
 import { SEO } from '../components/common/SEO';
 import { DemandRequestModal } from '../components/modals/DemandRequestModal';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 
 export const HospitalSearchPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { city } = useParams<{ city?: string }>();
   const { hospitals } = useHealthcare();
   const { location, setIsLocationModalOpen } = useLocation();
   const { t } = useLanguage();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const urlQ = searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || city || '';
+  const [searchTerm, setSearchTerm] = useState(urlQ);
   const [selectedHospitalForRequest, setSelectedHospitalForRequest] = useState<Hospital | null>(null);
+
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || city || '';
+    if (q !== searchTerm) setSearchTerm(q);
+  }, [searchParams, city]);
 
   const filteredHospitals = hospitals.filter(h => {
     const query = searchTerm ? searchTerm.toLowerCase().trim() : '';
@@ -38,8 +47,8 @@ export const HospitalSearchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-10">
       <SEO
-        title="Hospitals Near Me & Emergency Bed Tracker | MediTrust"
-        description="Find top multi-specialty, emergency, private & government hospitals in Hyderabad, Tirupati, Kanigiri & across India. Monitor live OPD queue tokens and ICU bed status."
+        title="Find Hospitals Near You | MediTrust"
+        description="Search hospital directory listings and open hospital locations in Google Maps. Contact hospitals directly to confirm services, emergency care, and bed availability."
         keywords={HOSPITAL_SEARCH_KEYWORDS}
         canonicalUrl="https://medynex.com/hospitals"
       />
@@ -50,12 +59,12 @@ export const HospitalSearchPage: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2">
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[11px] font-bold border border-emerald-500/20">
-                Live Bed Occupancy & Demand Network
+                Hospital Directory
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white mt-1">{t('findHospitals', 'Hospital Directory & Bed Tracker')}</h1>
+            <h1 className="text-3xl font-extrabold text-white mt-1">{t('findHospitals', 'Find Hospitals')}</h1>
             <p className="text-sm text-slate-400 mt-1">
-              Check ICU bed availability or request new hospitals in <strong className="text-cyan-400">{location.city || 'your region'}</strong> to join MediTrust.
+              Search directory listings in <strong className="text-cyan-400">{location.city || 'your region'}</strong>. Contact hospitals directly to confirm services and current bed availability; live bed data is not available here.
             </p>
           </div>
 
@@ -160,23 +169,9 @@ export const HospitalSearchPage: React.FC = () => {
 
                     {isOnboarded ? (
                       <div className="space-y-3">
-                        {/* Bed Availability Tracker */}
-                        <div className="p-4 rounded-2xl bg-[#0B1120] border border-slate-800 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-400">Live Bed Availability:</span>
-                            <span className="font-mono font-bold text-emerald-400">{hospital.availableBeds} / {hospital.totalBeds} Beds</span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                            <div 
-                              className="h-full bg-emerald-500 transition-all duration-500" 
-                              style={{ width: `${(hospital.availableBeds / hospital.totalBeds) * 100}%` }}
-                            ></div>
-                          </div>
-                        </div>
-
                         <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
-                          <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                            <AlertCircle className="w-3.5 h-3.5" /> Emergency 24x7
+                          <span className="flex items-center gap-1 text-slate-400 font-medium">
+                            <AlertCircle className="w-3.5 h-3.5" /> Contact hospital to confirm services
                           </span>
                           <span className="text-slate-400">{hospital.phone}</span>
                         </div>

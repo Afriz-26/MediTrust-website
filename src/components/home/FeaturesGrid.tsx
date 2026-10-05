@@ -13,7 +13,7 @@ import {
 import { Link } from 'react-router-dom';
 
 import indianDoctorsImg from '../../assets/images/indian_doctors_team_1787291153150.jpg';
-import indianPharmacyImg from '../../assets/images/indian_pharmacy_care_1787291167139.jpg';
+import modernPharmacyImg from '../../assets/images/pharmacy_dispensary_1790873041570.jpg';
 import indianPatientImg from '../../assets/images/indian_patient_care_1787291192534.jpg';
 import indianConsultationImg from '../../assets/images/indian_consultation_1787291140026.jpg';
 
@@ -48,7 +48,7 @@ const FEATURE_DATA: Record<string, {
     highlights: ['Automated QR prescription scanner verifying physician credentials & MCI/NMC registration', 'Live inventory stock tracking for essential Indian generic and branded medicines', 'Integrated delivery routing for fast patient home dispatch within 30-45 minutes'],
     linkText: 'Search Nearby Pharmacies',
     linkUrl: '/pharmacies',
-    image: indianPharmacyImg
+    image: modernPharmacyImg
   },
   'ai-assistant': {
     title: 'Medynex Generative AI Health Assistant',

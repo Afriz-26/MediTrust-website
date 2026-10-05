@@ -32,7 +32,7 @@ export const AboutMedynexPage: React.FC = () => {
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-12 lg:py-20">
       <SEO
         title="About Medynex Solutions LLP | Enterprise Healthcare Technology"
-        description="Medynex Solutions LLP is a pioneering digital healthcare technology company founded by Shaik Afriz and B. Nandini (Mohan Babu University). Dedicated to innovating healthcare through technology."
+        description="Medynex Solutions LLP is a pioneering digital healthcare technology company founded by Shaik Afriz and B. Nandini. Dedicated to innovating healthcare through technology."
         canonicalUrl="https://medynex.com/about-medynex"
         schema={aboutSchema}
       />
@@ -86,7 +86,7 @@ export const AboutMedynexPage: React.FC = () => {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-white">Executive Leadership</h2>
             <p className="text-sm text-slate-300">
-              Founded and led by software innovators and operations leaders from <strong>Mohan Babu University</strong>.
+              Founded and led by software innovators and operations leaders building next-generation health technology.
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export const AboutMedynexPage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#0B1120] border border-slate-800 space-y-3">
               <div className="flex items-center space-x-2 text-blue-400">
                 <GraduationCap className="w-5 h-5" />
-                <span className="text-xs font-mono uppercase font-bold">Mohan Babu University Alumnus</span>
+                <span className="text-xs font-mono uppercase font-bold">Technology Leader & Software Architect</span>
               </div>
               <h3 className="text-xl font-bold text-white">Shaik Afriz (Afriz Shaik)</h3>
               <p className="text-xs text-blue-400 font-semibold">Founder & Chief Executive Officer</p>
@@ -103,15 +103,15 @@ export const AboutMedynexPage: React.FC = () => {
               </p>
               <div className="pt-2 flex items-center space-x-3">
                 <Link to="/founder" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500">View Founder Profile</Link>
-                <a href="https://linkedin.com/in/shaik-afriz-a49311385" target="_blank" rel="noreferrer" title="LinkedIn Profile" className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"><Linkedin className="w-4 h-4" /></a>
-                <a href="https://github.com/shaik-afriz" target="_blank" rel="noreferrer" title="GitHub Profile" className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"><Github className="w-4 h-4" /></a>
+                <a href="https://www.linkedin.com/in/shaik-afriz-a49311385" target="_blank" rel="noreferrer" title="LinkedIn Profile" className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"><Linkedin className="w-4 h-4" /></a>
+                <a href="https://github.com/" target="_blank" rel="noreferrer" title="GitHub Profile" className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"><Github className="w-4 h-4" /></a>
               </div>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#0B1120] border border-slate-800 space-y-3">
               <div className="flex items-center space-x-2 text-cyan-400">
                 <GraduationCap className="w-5 h-5" />
-                <span className="text-xs font-mono uppercase font-bold">Mohan Babu University Alumna</span>
+                <span className="text-xs font-mono uppercase font-bold">Healthcare Operations & Network Lead</span>
               </div>
               <h3 className="text-xl font-bold text-white">Bandi Nandini (B. Nandini)</h3>
               <p className="text-xs text-cyan-400 font-semibold">Co-Founder & Head of Operations</p>

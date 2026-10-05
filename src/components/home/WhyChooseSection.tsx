@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Shield, Zap, Lock, Cpu, Globe, HeartHandshake } from 'lucide-react';
+import { Shield, Zap, Lock, Cpu, Globe, HeartHandshake, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import doctorsTeamImg from '../../assets/images/indian_doctors_team_1787291153150.jpg';
 
 const WHY_REASONS = [
   {
@@ -109,6 +111,81 @@ export const WhyChooseSection: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Clinical Excellence Banner with Professional Photography */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-16 rounded-3xl bg-[#071618] border border-[#0F3538] overflow-hidden grid grid-cols-1 lg:grid-cols-12 shadow-xl"
+        >
+          {/* Image Column */}
+          <div className="lg:col-span-5 relative aspect-square sm:aspect-video lg:aspect-auto overflow-hidden bg-slate-900">
+            <img
+              src={doctorsTeamImg}
+              alt="Medical Doctors and Clinical Practitioners Collaborating on the MediTrust Network"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#071618] via-transparent to-transparent lg:hidden" />
+            <div className="absolute top-4 left-4 z-10">
+              <span className="px-3 py-1 rounded-xl bg-[#041517]/90 text-[#2DD4BF] text-[11px] font-mono font-bold border border-[#0D4B4E] backdrop-blur-md">
+                Clinical Network Alliance
+              </span>
+            </div>
+          </div>
+
+          {/* Editorial Content Column */}
+          <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between space-y-6 text-slate-100">
+            <div className="space-y-4">
+              <span className="text-xs font-mono font-semibold text-[#2DD4BF] uppercase tracking-wider">
+                ENGINEERED WITH REGISTERED PRACTITIONERS
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                Designed to restore human focus to patient consultations.
+              </h3>
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                By replacing chaotic physical waiting rooms with live digital OPD queue tokens and eliminating illegible handwritten scripts, MediTrust gives physicians back hours every week to concentrate on clinical care.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="flex items-center gap-2.5 text-xs text-slate-200">
+                  <CheckCircle2 className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+                  <span>No proprietary hardware required</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-200">
+                  <CheckCircle2 className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+                  <span>Instant WhatsApp token updates</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-200">
+                  <CheckCircle2 className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+                  <span>Cryptographic QR prescription auth</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-200">
+                  <CheckCircle2 className="w-4 h-4 text-[#2DD4BF] shrink-0" />
+                  <span>Full ABDM health record interoperability</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-wrap items-center gap-4">
+              <Link
+                to="/for-doctors"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition-all shadow-md flex items-center gap-2"
+              >
+                <span>For Doctors & Clinics</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="px-6 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs border border-slate-700 transition-all"
+              >
+                <span>Explore Workflow</span>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
 
       </div>
     </section>

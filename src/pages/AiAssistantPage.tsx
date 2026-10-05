@@ -152,7 +152,7 @@ export const AiAssistantPage: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [inputQuery, setInputQuery] = useState('');
   const [enableSearch, setEnableSearch] = useState(false);
-  const [enableMaps, setEnableMaps] = useState(true);
+  const [enableMaps, setEnableMaps] = useState(false);
   const [thinkingMode, setThinkingMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
@@ -554,32 +554,40 @@ export const AiAssistantPage: React.FC = () => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        let streamBuffer = '';
+        const handleStreamEvent = (event: string) => {
+          const data = event
+            .split('\n')
+            .filter(line => line.startsWith('data:'))
+            .map(line => line.slice(5).trim())
+            .join('\n');
+          if (!data || data === '[DONE]') return;
+
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            throw new Error(`GEMINI_PROVIDER_ERROR:${parsed.status || 'unavailable'}`);
+          }
+          if (parsed.text) onChunk(parsed.text);
+        };
 
         while (true) {
           const { done, value } = await reader.read();
           resetInactivityTimer();
 
-          if (done) break;
+          if (done) {
+            streamBuffer += decoder.decode();
+            break;
+          }
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const dataStr = line.replace('data: ', '').trim();
-              if (dataStr === '[DONE]') break;
-
-              try {
-                const parsed = JSON.parse(dataStr);
-                if (parsed.text) {
-                  onChunk(parsed.text);
-                }
-              } catch {
-                // Ignore partial JSON chunks
-              }
-            }
+          streamBuffer += decoder.decode(value, { stream: true });
+          let eventEnd = streamBuffer.indexOf('\n\n');
+          while (eventEnd !== -1) {
+            handleStreamEvent(streamBuffer.slice(0, eventEnd));
+            streamBuffer = streamBuffer.slice(eventEnd + 2);
+            eventEnd = streamBuffer.indexOf('\n\n');
           }
         }
+        if (streamBuffer.trim()) handleStreamEvent(streamBuffer);
 
         if (inactivityTimeoutId) clearTimeout(inactivityTimeoutId);
         userSignal.removeEventListener('abort', onUserAbort);
@@ -713,34 +721,21 @@ export const AiAssistantPage: React.FC = () => {
     let accumulatedText = '';
 
     try {
-      // Use the non-streaming /api/gemini/chat route for reliable Vercel serverless support.
-      // (SSE streaming over Vercel serverless functions is subject to buffering/timeouts;
-      //  the chat route returns a single JSON { text } response which deploys reliably.)
-      const chatHistory = updatedHistory
-        .filter(m => !m.isError)
-        .map(m => ({ sender: m.sender, text: m.text }));
-
-      const data = await fetchJSONWithRetryAndTimeout(
-        '/api/gemini/chat',
+      await fetchStreamWithRetryAndTimeout(
+        '/api/gemini/stream',
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: query,
-            history: chatHistory,
-            language: selectedLanguage,
-            model: 'gemini-3.6-flash'
-          })
+          messages: updatedHistory.filter(m => !m.isError).map(m => ({ role: m.sender === 'user' ? 'user' : 'model', content: m.text })),
+          language: selectedLanguage,
+          model: thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash',
+          enableSearch,
+          enableMaps
         },
-        90000,
-        3
+        (token) => {
+          accumulatedText += token;
+          setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: accumulatedText } : msg));
+        },
+        userController.signal
       );
-
-      const aiText = data?.text || '';
-      if (aiText) {
-        accumulatedText = aiText;
-        setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? { ...msg, text: aiText } : msg));
-      }
     } catch (err: any) {
       if (err.message === 'USER_ABORTED' || userController.signal.aborted) {
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
@@ -748,11 +743,38 @@ export const AiAssistantPage: React.FC = () => {
           text: msg.text + (msg.text ? '\n\n_[Generation stopped by user.]_' : '_[Request cancelled.]_')
         } : msg));
       } else {
-        const errorDetail = err?.message || JSON.stringify(err);
-        console.error('Chat Stream API Error:', errorDetail, err);
+        console.warn('Stream failed or incomplete, attempting direct chat fallback:', err?.message);
+        // Fallback to non-streaming POST /api/gemini/chat
+        try {
+          const fallbackData = await fetchJSONWithRetryAndTimeout('/api/gemini/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: query,
+              history: updatedHistory.slice(0, -1),
+              language: selectedLanguage,
+              model: thinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash',
+              enableSearch,
+              enableMaps
+            })
+          }, 20000, 2);
+
+          if (fallbackData?.text) {
+            setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
+              ...msg,
+              text: fallbackData.text,
+              isError: false
+            } : msg));
+            return;
+          }
+        } catch (fallbackErr: any) {
+          console.error('Fallback chat API also failed:', fallbackErr);
+        }
+
+        const errorDetail = err?.message || 'Server connection error';
         setMessages(prev => prev.map(msg => msg.id === streamAiMsgId ? {
           ...msg,
-          text: accumulatedText || `I am temporarily unable to reach the Gemini server (${errorDetail}). Please check your connection or try again shortly.`,
+          text: accumulatedText || `I am temporarily unable to reach the Gemini server (${errorDetail}). Please verify your GEMINI_API_KEY is configured in Vercel settings and try again.`,
           isError: true
         } : msg));
       }

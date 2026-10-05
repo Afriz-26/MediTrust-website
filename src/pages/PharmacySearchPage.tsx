@@ -1,46 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'react-router-dom';
 import { useHealthcare } from '../context/HealthcareContext';
 import { useLocation } from '../context/LocationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Pharmacy } from '../types';
-import { Pill, MapPin, Phone, Truck, Clock, Search, ShoppingBag, CheckCircle2, Sparkles, Store, ExternalLink, AlertCircle } from 'lucide-react';
+import { MapPin, Search, ExternalLink, AlertCircle, X, CheckCircle2 } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { PHARMACY_SEARCH_KEYWORDS } from '../lib/seo';
-import { PharmacyOrderModal } from '../components/modals/PharmacyOrderModal';
-import { DemandRequestModal } from '../components/modals/DemandRequestModal';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
+import { getGoogleMapsSearchUrl } from '../lib/googleMaps';
 
 export const PharmacySearchPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { allPharmacies } = useHealthcare();
   const { location, setIsLocationModalOpen } = useLocation();
   const { t } = useLanguage();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPharmacyForOrder, setSelectedPharmacyForOrder] = useState<Pharmacy | null>(null);
-  const [selectedPharmacyForRequest, setSelectedPharmacyForRequest] = useState<Pharmacy | null>(null);
+  const urlQ = searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || '';
 
-  const filteredPharmacies = allPharmacies.filter(pharm => {
+  const [searchTerm, setSearchTerm] = useState(urlQ);
+
+  // Sync state if URL query changes
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || searchParams.get('query');
+    if (q !== null && q !== searchTerm) setSearchTerm(q);
+  }, [searchParams]);
+
+  const quickFilterPills = [
+    'Apollo Pharmacy',
+    'MedPlus',
+    'Sri Venkateswara',
+    '24/7 Delivery',
+    'Jan Aushadhi'
+  ];
+
+  const filteredPharmacies = useMemo(() => {
     const query = searchTerm ? searchTerm.toLowerCase().trim() : '';
-    const matchesSearch = !query ||
-                          (pharm.name && pharm.name.toLowerCase().includes(query)) ||
-                          (pharm.address && pharm.address.toLowerCase().includes(query)) ||
-                          (pharm.city && pharm.city.toLowerCase().includes(query));
+    
+    // First, filter by search query
+    const searchMatched = allPharmacies.filter(pharm => {
+      if (!query) return true;
+      if (query.includes('24/7') || query.includes('24x7') || query.includes('night')) {
+        return pharm.open24x7;
+      }
+      if (query.includes('jan aushadhi') || query.includes('generic')) {
+        return pharm.name.toLowerCase().includes('jan aushadhi') || pharm.name.toLowerCase().includes('generic');
+      }
+      return (
+        (pharm.name && pharm.name.toLowerCase().includes(query)) ||
+        (pharm.address && pharm.address.toLowerCase().includes(query)) ||
+        (pharm.city && pharm.city.toLowerCase().includes(query))
+      );
+    });
 
-    const matchesLocation = !location?.city || 
-                            (pharm.city && location.city && pharm.city.toLowerCase() === location.city.toLowerCase()) || 
-                            (pharm.address && location.city && pharm.address.toLowerCase().includes(location.city.toLowerCase())) ||
-                            pharm.city === 'All India' ||
-                            query.length > 0;
+    // If search term is present, show all matches regardless of location
+    if (query) return searchMatched;
 
-    return matchesSearch && matchesLocation;
-  });
+    // Filter by city if set
+    if (location?.city) {
+      const cityMatched = searchMatched.filter(pharm => 
+        (pharm.city && location.city && pharm.city.toLowerCase() === location.city.toLowerCase()) ||
+        (pharm.address && location.city && pharm.address.toLowerCase().includes(location.city.toLowerCase())) ||
+        pharm.city === 'All India'
+      );
+      if (cityMatched.length > 0) return cityMatched;
+    }
+
+    // Fallback: show all verified pharmacies in the network
+    return searchMatched;
+  }, [allPharmacies, searchTerm, location?.city]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 py-10">
       <SEO
-        title="Pharmacies Near Me & 24 Hour Medicine Delivery | MediTrust India"
-        description="Find 24-hour pharmacies, medical stores, and online medicine delivery in Hyderabad, Bengaluru, Tirupati, Chennai and across India with digital e-prescription upload."
+        title="Find Pharmacies Near You | MediTrust India"
+        description="Search pharmacy directory entries or open current pharmacy listings in Google Maps. Contact pharmacies to confirm current hours, medicine stock, and prices."
         keywords={PHARMACY_SEARCH_KEYWORDS}
         canonicalUrl="https://medynex.com/pharmacies"
       />
@@ -51,12 +86,12 @@ export const PharmacySearchPage: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2">
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono text-[11px] font-bold border border-blue-200">
-                Verified Indian Pharmacies & Chemists
+                Pharmacy Directory
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 mt-1">{t('findPharmacies', 'Pharmacies & Doorstep Delivery')}</h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 mt-1">{t('findPharmacies', 'Find Pharmacies')}</h1>
             <p className="text-sm text-slate-600 mt-1">
-              Order genuine medicines in ₹ from licensed pharmacies in <strong className="text-blue-600">{location.city || 'your city'}</strong> or upload your prescription.
+              Search pharmacy directory entries in <strong className="text-blue-600">{location.city || 'your city'}</strong>. This page does not place orders or show live stock. Call a pharmacy to confirm its hours and medicine availability.
             </p>
           </div>
 
@@ -70,13 +105,67 @@ export const PharmacySearchPage: React.FC = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
           <SearchAutocomplete 
             value={searchTerm} 
-            onChange={setSearchTerm} 
+            onChange={(val) => {
+              setSearchTerm(val);
+              setSearchParams(prev => {
+                const u = new URLSearchParams(prev);
+                if (val) u.set('q', val);
+                else u.delete('q');
+                return u;
+              });
+            }} 
             filterType="pharmacy"
             placeholder="Search pharmacy name, medicine, brand, or area (e.g. Apollo, MedPlus, Dolo 650)..." 
           />
+
+          {/* Quick Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+            <span className="text-[11px] font-mono text-slate-400 uppercase font-semibold mr-1">Quick Filters:</span>
+            {quickFilterPills.map((pill, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setSearchTerm(pill);
+                  setSearchParams(prev => {
+                    const u = new URLSearchParams(prev);
+                    u.set('q', pill);
+                    return u;
+                  });
+                }}
+                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                  searchTerm === pill
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 border border-slate-200/80'
+                }`}
+              >
+                {pill}
+              </button>
+            ))}
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSearchParams(prev => {
+                    const u = new URLSearchParams(prev);
+                    u.delete('q');
+                    return u;
+                  });
+                }}
+                className="px-2.5 py-1 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Clear</span>
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-slate-500">
+            Directory information may be outdated and is not an endorsement or verification of pharmacy licensing. Use Google Maps or contact the pharmacy to confirm details.
+          </p>
         </div>
 
         {/* Location Notice Banner if no partnered pharmacy exists */}
@@ -121,7 +210,7 @@ export const PharmacySearchPage: React.FC = () => {
                         {isOnboarded ? (
                           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold border border-emerald-200 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            <span>Licensed Chemist</span>
+                            <span>MediTrust Directory Partner</span>
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-mono text-[10px] font-bold border border-amber-200">
@@ -146,43 +235,20 @@ export const PharmacySearchPage: React.FC = () => {
                         </a>
                       </div>
 
-                      {isOnboarded && (
-                        <div className="text-xs text-emerald-700 font-mono font-semibold pt-1">
-                          {pharm.inStockMedicinesCount.toLocaleString()} Medicines In Stock
-                        </div>
-                      )}
                     </div>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-slate-100">
-                    {isOnboarded ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
-                          <span className="flex items-center gap-1"><Truck className="w-4 h-4 text-amber-600" /> Express Doorstep Delivery</span>
-                          <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-emerald-600" /> 24x7 Open</span>
-                        </div>
-                        <button
-                          onClick={() => setSelectedPharmacyForOrder(pharm)}
-                          className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center space-x-1.5"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>Order Medicines / Upload Prescription</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                          Request this pharmacy to join MediTrust so you can order home delivery and digital prescriptions!
-                        </p>
-                        <button
-                          onClick={() => setSelectedPharmacyForRequest(pharm)}
-                          className="w-full py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold border border-amber-300 transition-all flex items-center justify-center space-x-1.5"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <span>Request Pharmacy Onboarding ({pharm.requestCount || 18} Requests)</span>
-                        </button>
-                      </div>
-                    )}
+                    <a
+                      href={getGoogleMapsSearchUrl([pharm.name, pharm.address, pharm.city].filter(Boolean).join(', '))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      <span>Open pharmacy in Google Maps</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   </div>
                 </motion.div>
               );
@@ -190,29 +256,7 @@ export const PharmacySearchPage: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Modals */}
-        <PharmacyOrderModal
-          pharmacy={selectedPharmacyForOrder}
-          isOpen={!!selectedPharmacyForOrder}
-          onClose={() => setSelectedPharmacyForOrder(null)}
-        />
-
-        {selectedPharmacyForRequest && (
-          <DemandRequestModal
-            provider={{
-              id: selectedPharmacyForRequest.id,
-              name: selectedPharmacyForRequest.name,
-              type: 'Pharmacy',
-              city: selectedPharmacyForRequest.city,
-              area: selectedPharmacyForRequest.area
-            }}
-            isOpen={!!selectedPharmacyForRequest}
-            onClose={() => setSelectedPharmacyForRequest(null)}
-          />
-        )}
-
       </div>
     </div>
   );
 };
-

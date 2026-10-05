@@ -3,13 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useHealthcare } from '../context/HealthcareContext';
 import { useLocation } from '../context/LocationContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Laboratory, LabTest } from '../types';
-import { FlaskConical, ShieldCheck, Home, Calendar, CheckCircle2, Clock, MapPin, Search, Sparkles, TestTube, ExternalLink, AlertCircle } from 'lucide-react';
+import { FlaskConical, MapPin, Search, ExternalLink, AlertCircle } from 'lucide-react';
 import { LAB_SEARCH_KEYWORDS } from '../lib/seo';
 import { SEO } from '../components/common/SEO';
-import { LabBookingModal } from '../components/modals/LabBookingModal';
-import { DemandRequestModal } from '../components/modals/DemandRequestModal';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
+import { getGoogleMapsSearchUrl } from '../lib/googleMaps';
 
 export const LabSearchPage: React.FC = () => {
   const { laboratories } = useHealthcare();
@@ -17,8 +15,6 @@ export const LabSearchPage: React.FC = () => {
   const { t } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLabForBooking, setSelectedLabForBooking] = useState<{ lab: Laboratory; test?: LabTest } | null>(null);
-  const [selectedLabForRequest, setSelectedLabForRequest] = useState<Laboratory | null>(null);
 
   const filteredLabs = laboratories.filter(lab => {
     const query = searchTerm ? searchTerm.toLowerCase().trim() : '';
@@ -40,8 +36,8 @@ export const LabSearchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-10">
       <SEO
-        title="Diagnostic Labs Near Me & Blood Test Home Collection | MediTrust"
-        description="Book NABL accredited pathology diagnostic labs, blood tests, and health checkups in Hyderabad, Tirupati and across India with doorstep home sample collection."
+        title="Find Diagnostic Labs Near You | MediTrust"
+        description="Search diagnostic lab directory entries and open local lab results in Google Maps. Confirm accreditation, test availability, current pricing, and sample collection with the lab."
         keywords={LAB_SEARCH_KEYWORDS}
         canonicalUrl="https://medynex.com/laboratories"
       />
@@ -55,9 +51,9 @@ export const LabSearchPage: React.FC = () => {
                 Diagnostic & Demand Network
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white mt-1">{t('findLabs', 'Diagnostic Labs & Home Collection')}</h1>
+            <h1 className="text-3xl font-extrabold text-white mt-1">{t('findLabs', 'Find Diagnostic Labs')}</h1>
             <p className="text-sm text-slate-400 mt-1">
-              Book pathology tests in <strong className="text-cyan-400">{location.city || 'your area'}</strong> or request diagnostic centers to onboard on MediTrust.
+              Search directory entries in <strong className="text-cyan-400">{location.city || 'your area'}</strong>. Test booking is not available; contact a lab directly to confirm services, accreditation, prices, and home collection.
             </p>
           </div>
 
@@ -79,6 +75,9 @@ export const LabSearchPage: React.FC = () => {
             placeholder="Search diagnostic lab name, test (CBC, Thyroid, Lipid Profile)..." 
           />
         </div>
+        <p className="text-xs text-slate-400">
+          Directory details and prices may be outdated. Confirm accreditation, availability, and pricing directly with the laboratory.
+        </p>
 
         {/* Location Notice Banner if no partnered lab exists */}
         {location.city && filteredLabs.filter(l => l.onboardingStatus === 'Active' || l.onboardingStatus === 'Verified').length === 0 && (
@@ -149,8 +148,8 @@ export const LabSearchPage: React.FC = () => {
 
                         {isOnboarded && (
                           <div className="flex items-center gap-2 mt-1">
-                            {lab.nablAccredited && <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">NABL Accredited</span>}
-                            {lab.homeCollection && <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Home Sample Collection</span>}
+                            {lab.nablAccredited && <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">NABL status listed; verify</span>}
+                            {lab.homeCollection && <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Home collection listed</span>}
                           </div>
                         )}
                       </div>
@@ -167,14 +166,16 @@ export const LabSearchPage: React.FC = () => {
                               <div className="text-xs text-slate-400">{test.sampleType} • Turnaround: {test.turnaroundTime}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-bold text-emerald-400">₹{test.discountPrice || test.price}</div>
-                              {test.discountPrice && <div className="text-[10px] text-slate-500 line-through">₹{test.price}</div>}
-                              <button 
-                                onClick={() => setSelectedLabForBooking({ lab, test })}
-                                className="mt-1 px-3 py-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] font-bold"
+                              <div className="text-sm font-bold text-emerald-400">Listed: ₹{test.discountPrice || test.price}</div>
+                              <a
+                                href={getGoogleMapsSearchUrl([lab.name, lab.location].filter(Boolean).join(', '))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1 text-[11px] font-bold text-white hover:from-cyan-400 hover:to-blue-500"
                               >
-                                Book Test
-                              </button>
+                                Contact via Maps
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
                             </div>
                           </div>
                         ))}
@@ -182,15 +183,8 @@ export const LabSearchPage: React.FC = () => {
                     ) : (
                       <div className="space-y-3 pt-4 border-t border-slate-800">
                         <p className="text-xs text-amber-300/90 leading-relaxed">
-                          This lab is not yet onboarded. Submitting a demand request alerts the laboratory management to register on MediTrust!
+                          This directory entry is not partnered with MediTrust. Contact the laboratory directly to confirm details.
                         </p>
-                        <button
-                          onClick={() => setSelectedLabForRequest(lab)}
-                          className="w-full py-2.5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/40 transition-all flex items-center justify-center space-x-1.5"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-400" />
-                          <span>Request Laboratory Onboarding ({lab.requestCount || 21} Requests)</span>
-                        </button>
                       </div>
                     )}
                   </div>
@@ -200,30 +194,6 @@ export const LabSearchPage: React.FC = () => {
             })}
           </AnimatePresence>
         </div>
-
-        {/* Modals */}
-        {selectedLabForBooking && (
-          <LabBookingModal
-            lab={selectedLabForBooking.lab}
-            test={selectedLabForBooking.test}
-            isOpen={!!selectedLabForBooking}
-            onClose={() => setSelectedLabForBooking(null)}
-          />
-        )}
-
-        {selectedLabForRequest && (
-          <DemandRequestModal
-            provider={{
-              id: selectedLabForRequest.id,
-              name: selectedLabForRequest.name,
-              type: 'Laboratory',
-              city: selectedLabForRequest.city,
-              area: selectedLabForRequest.area
-            }}
-            isOpen={!!selectedLabForRequest}
-            onClose={() => setSelectedLabForRequest(null)}
-          />
-        )}
 
       </div>
     </div>

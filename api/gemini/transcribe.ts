@@ -1,9 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { Request as VercelRequest, Response as VercelResponse } from 'express';
 import { GoogleGenAI } from '@google/genai';
-import dotenv from 'dotenv';
-dotenv.config();
 
-export const config = { maxDuration: 60 };
+export const maxDuration = 60;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -21,15 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    const PLACEHOLDER_API_KEYS = [
-      'MY_GEMINI_API_KEY',
-      'your_gemini_api_key_here',
-      'your-gemini-api-key',
-      'YOUR_API_KEY',
-      'REPLACE_WITH_YOUR_KEY',
-    ];
-    const isPlaceholder = !apiKey || PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
-    if (isPlaceholder) {
+    if (!apiKey) {
       res.status(200).json({ text: 'Find an offline cardiologist near Tirupati OPD for consultation.' });
       return;
     }
@@ -43,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.7-flash',
       contents: {
         parts: [
           audioPart,

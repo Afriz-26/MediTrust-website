@@ -225,7 +225,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const requestGPSLocation = async (): Promise<UserLocation> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
@@ -273,12 +273,17 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           },
           (err) => {
             console.warn('[GPS Geolocation Permission/Error]:', err.message);
-            resolve(location);
+            const message = err.code === err.PERMISSION_DENIED
+              ? 'Location permission was denied. Allow location access in your browser, or choose a city manually.'
+              : err.code === err.TIMEOUT
+                ? 'We could not detect your location in time. Please try again or choose a city manually.'
+                : 'Your location is unavailable. Please choose a city manually.';
+            reject(new Error(message));
           },
           { timeout: 8000, enableHighAccuracy: true }
         );
       } else {
-        resolve(location);
+        reject(new Error('This browser does not support location detection. Please choose a city manually.'));
       }
     });
   };

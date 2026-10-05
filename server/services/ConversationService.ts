@@ -12,26 +12,19 @@ export interface ChatMessage {
 }
 
 export class ConversationService {
-  private static PLACEHOLDER_API_KEYS = [
-    'MY_GEMINI_API_KEY',
-    'your_gemini_api_key_here',
-    'your-gemini-api-key',
-    'YOUR_API_KEY',
-    'REPLACE_WITH_YOUR_KEY',
-    'your-supabase-anon-key',
-  ];
-
   private static getAiClient() {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    const rawKey = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
+    const apiKey = rawKey.replace(/^["']|["']$/g, '').trim();
     if (!apiKey) {
+      console.warn('[ConversationService] No GEMINI_API_KEY or VITE_GEMINI_API_KEY found in environment variables.');
       return null;
     }
-    const isPlaceholder = this.PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
-    if (isPlaceholder) {
-      console.warn('GEMINI_API_KEY is set to a placeholder or empty value. Using offline fallback mode.');
+    try {
+      return new GoogleGenAI({ apiKey });
+    } catch (e: any) {
+      console.error('[ConversationService] Failed to initialize GoogleGenAI client:', e?.message || e);
       return null;
     }
-    return new GoogleGenAI({ apiKey });
   }
 
   public static getSystemInstruction(language: string = 'English'): string {
@@ -58,13 +51,15 @@ ${langRule}`;
   }
 
   public static async *generateStreamResponse(
-    messages: ChatMessage[],
+    messages: ChatMessage[] = [],
     language: string = 'English',
-    modelName: string = 'gemini-3.6-flash'
+    modelName: string = 'gemini-3.8-flash',
+    grounding: { enableSearch?: boolean; enableMaps?: boolean } = {}
   ): AsyncGenerator<string, void, unknown> {
     const ai = this.getAiClient();
+    const safeMessages = Array.isArray(messages) ? messages : [];
 
-    const lastUserMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
+    const lastUserMsg = safeMessages.filter(m => m && m.role === 'user').pop()?.content || '';
 
     // Step 1: Check Emergency Red Flags
     const emergency = SafetyLayer.analyzeEmergency(lastUserMsg);
@@ -91,19 +86,25 @@ ${langRule}`;
       }
     }
 
+    // Fast Triage for greetings when running instant
+    const lowerUserMsg = lastUserMsg.toLowerCase().trim();
+    if (/^(hi|hello|hey|namaste|greetings|good morning|good afternoon|good evening)$/i.test(lowerUserMsg)) {
+      yield `Hello! I'm **MediTrust AI Clinical Assistant** from Medynex Solutions. How can I assist with your health, symptoms, medicines, or finding verified doctors today?`;
+      return;
+    }
+
     // Step 3: Construct Prompt History
     const systemPrompt = this.getSystemInstruction(language);
     
     // Convert messages into Gemini contents format
     const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-    // Include system prompt & grounding context in first user or system message
     let systemContextAdded = false;
 
-    for (const msg of messages) {
-      if (msg.role === 'system') continue;
+    for (const msg of safeMessages) {
+      if (!msg || msg.role === 'system') continue;
 
-      let textContent = msg.content;
+      let textContent = msg.content || '';
       if (!systemContextAdded && msg.role === 'user') {
         textContent = `${systemPrompt}\n\n${groundingContext ? groundingContext + '\n\n' : ''}User Question: ${msg.content}`;
         systemContextAdded = true;
@@ -123,38 +124,52 @@ ${langRule}`;
     }
 
     if (!ai) {
-      yield `Thank you for consulting **MediTrust AI Clinical Assistant**.\n\nRegarding your query about **"${lastUserMsg}"**:\n\n### 📋 Clinical Overview:\n- **Primary Consideration:** Healthcare queries benefit from structured evaluation, considering symptom duration, medical history, and current medications.\n- **Guidance:** Ensure adequate hydration, proper rest, and regular health monitoring.\n\n---\n\n### 🩺 What would you like to do next?\n1. **Find Doctors:** Search OPD token availability in Tirupati, Hyderabad, or your city.\n2. **Ask Follow-up Questions:** Provide details on symptoms, duration, or age.\n3. **Verify Medicine:** Scan your prescription or search medicine details & dosages.\n`;
+      // Fast Intelligent Structured Fallback
+      if (foundMed) {
+        yield `### 💊 Clinical Details: **${foundMed.name}**\n\n- **Brand Names in India:** ${foundMed.brandNames.join(', ')}\n- **Pharmacological Class:** ${foundMed.drugClass}\n- **Primary Indications:** ${foundMed.uses}\n- **Standard Dosage:** ${foundMed.dosageRanges}\n- **Common Side Effects:** ${foundMed.commonSideEffects.join(', ')}\n\n⚠️ **Important Precautions:**\n- Pregnancy: ${foundMed.precautions.pregnancy}\n- Kidney/Renal: ${foundMed.precautions.kidney}\n- Liver: ${foundMed.precautions.liver}\n\n*Always consult your certified doctor or pharmacist before starting or modifying dosages.*`;
+      } else if (foundTopic) {
+        yield `### 🩺 Healthcare Guidance: **${foundTopic.title}**\n\n${foundTopic.overview}\n\n**Common Clinical Symptoms:**\n${foundTopic.symptoms.map(s => `- ${s}`).join('\n')}\n\n**Standard Treatment Approaches:**\n${foundTopic.treatmentOptions.map(t => `- ${t}`).join('\n')}\n\n**Lifestyle & Recovery Tips:**\n${foundTopic.lifestyleManagement.map(l => `- ${l}`).join('\n')}`;
+      } else {
+        yield `Thank you for consulting **MediTrust AI Clinical Assistant**.\n\nRegarding your query about **"${lastUserMsg || 'healthcare guidance'}"**:\n\n### 📋 Clinical Overview:\n- **Primary Consideration:** Healthcare queries benefit from structured evaluation, considering symptom duration, medical history, and current medications.\n- **Guidance:** Ensure adequate hydration, proper rest, and regular health monitoring.\n\n---\n\n### 🩺 What would you like to do next?\n1. **Find Doctors:** Search OPD token availability in Tirupati, Hyderabad, or your city.\n2. **Ask Follow-up Questions:** Provide details on symptoms, duration, or age.\n3. **Verify Medicine:** Scan your prescription or search medicine details & dosages.`;
+      }
       yield SafetyLayer.getDisclaimerBanner(language);
       return;
     }
 
     try {
-      const validModel = 'gemini-3.6-flash';
+      const validModel = modelName.includes('pro') ? 'gemini-3.1-pro-preview' : 'gemini-3.8-flash';
+      const tools = grounding.enableMaps
+        ? [{ googleMaps: {} }]
+        : grounding.enableSearch
+          ? [{ googleSearch: {} }]
+          : undefined;
 
       const responseStream = await withRetry(
         async () => {
           try {
             return await ai.models.generateContentStream({
               model: validModel,
-              contents
+              contents,
+              config: tools ? { tools } : undefined
             });
           } catch (mErr: any) {
-            if (validModel !== 'gemini-3.6-flash') {
-              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-3.6-flash.`);
+            if (validModel !== 'gemini-3.8-flash') {
+              console.warn(`[Gemini Stream] Model ${validModel} unavailable (${mErr?.message}). Falling back to gemini-3.8-flash.`);
               return await ai.models.generateContentStream({
-                model: 'gemini-3.6-flash',
-                contents
+                model: 'gemini-3.8-flash',
+                contents,
+                config: tools ? { tools } : undefined
               });
             }
             throw mErr;
           }
         },
         {
-          maxRetries: 3,
-          initialDelayMs: 1000,
-          maxDelayMs: 6000,
+          maxRetries: 1,
+          initialDelayMs: 400,
+          maxDelayMs: 2000,
           onRetry: (err, attempt, delayMs) => {
-            console.warn(`[Gemini Stream Retry ${attempt}/3] ${err.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
+            console.warn(`[Gemini Stream Retry ${attempt}/1] ${err.message || err}.`);
           }
         }
       );
@@ -169,7 +184,7 @@ ${langRule}`;
       const errorStatus = err?.status || err?.code || '';
       const errorDetails = err?.response?.data || err?.error || err?.response || '';
       console.error(`[Gemini API Stream Error] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      yield `\n\n*(Clinical note: Live model connection error: ${errorMessage}${errorStatus ? ` [Status: ${errorStatus}]` : ''}. Diagnostic fallback response generated.)*\n\nRegarding your query: "${lastUserMsg}"\n\nPlease ensure you consult a certified doctor for personal medical concerns.`;
+      throw err;
     }
 
     // Append disclaimer if not present

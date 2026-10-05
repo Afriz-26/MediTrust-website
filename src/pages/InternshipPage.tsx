@@ -285,7 +285,7 @@ export const InternshipPage: React.FC = () => {
                     <div className="sm:col-span-2">
                       <label className="block text-slate-400 mb-1 font-semibold">College / University *</label>
                       <input 
-                        type="text" required placeholder="e.g. Mohan Babu University / SVU"
+                        type="text" required placeholder="e.g. University / Engineering Institute"
                         value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})}
                         className="w-full px-3 py-2.5 rounded-xl bg-[#0B1120] border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
                       />

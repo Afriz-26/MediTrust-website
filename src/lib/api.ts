@@ -453,9 +453,9 @@ export const MOCK_NEWS: NewsArticle[] = [
     content: 'Medynex Solutions LLP has officially released MediTrust 2.0, a landmark health-tech platform bringing unprecedented interoperability to India’s healthcare ecosystem. Powered by robust cloud architecture and AI-driven clinical tools, MediTrust provides patients with instant digital tokens, verified doctor scheduling, and unified digital prescriptions.',
     category: 'Product Launch',
     author: 'Medynex Tech Bureau',
-    publishedAt: 'July 20, 2026',
+    publishedAt: 'October 1, 2026',
     readTime: '4 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=600'
+    imageUrl: '/src/assets/images/news_abdm_health_1790873696454.jpg'
   },
   {
     id: 'news-2',
@@ -465,8 +465,8 @@ export const MOCK_NEWS: NewsArticle[] = [
     content: 'Waiting in crowded hospital corridors is fast becoming a thing of the past. MediTrust’s dynamic queue token technology notifies patients on their smartphones about exact consultation schedules, enabling staggering arrival times and improving doctor productivity.',
     category: 'Case Study',
     author: 'Dr. MediTrust Research Team',
-    publishedAt: 'July 15, 2026',
+    publishedAt: 'September 24, 2026',
     readTime: '5 min read',
-    imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600'
+    imageUrl: '/src/assets/images/news_opd_queue_1790873710348.jpg'
   }
 ];

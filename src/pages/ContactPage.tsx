@@ -80,8 +80,9 @@ export const ContactPage: React.FC = () => {
                   <div>
                     <div className="font-semibold text-white">Executive Leadership</div>
                     <div className="text-xs text-slate-300 mt-1">
-                      • <strong>Shaik Afriz</strong> — Founder & CEO (Mohan Babu Univ.)<br />
-                      • <strong>B. Nandini</strong> — Co-Founder & Head of Operations (Mohan Babu Univ.)
+                      • <strong>Shaik Afriz</strong> — Founder, CEO & CTO<br />
+                      • <strong>B. Nandini</strong> — Co-Founder & Head of Operations<br />
+                      • <strong>T Vrithika</strong> — Digital Marketing & Growth Lead
                     </div>
                   </div>
                 </div>
@@ -93,7 +94,7 @@ export const ContactPage: React.FC = () => {
                     <div className="text-slate-400 leading-relaxed text-xs">
                       Medynex Solutions LLP<br />
                       Innovating Healthcare Through Technology<br />
-                      Tirupati / Hyderabad, India
+                      Tirupati / Kanigiri, Andhra Pradesh, India
                     </div>
                   </div>
                 </div>
@@ -112,7 +113,7 @@ export const ContactPage: React.FC = () => {
                 <div className="text-xs font-semibold text-white uppercase font-mono">Connect With Founder</div>
                 <div className="flex items-center space-x-3 pt-1">
                   <a 
-                    href="https://linkedin.com/in/shaik-afriz-a49311385" 
+                    href="https://www.linkedin.com/in/shaik-afriz-a49311385" 
                     target="_blank" 
                     rel="noreferrer" 
                     className="px-3.5 py-2 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white text-xs font-semibold flex items-center gap-2 transition-colors"
@@ -121,13 +122,13 @@ export const ContactPage: React.FC = () => {
                     <span>LinkedIn Profile</span>
                   </a>
                   <a 
-                    href="https://github.com/shaik-afriz" 
+                    href="https://github.com/" 
                     target="_blank" 
                     rel="noreferrer" 
                     className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors"
                   >
                     <Github className="w-4 h-4" />
-                    <span>GitHub</span>
+                    <span>GitHub Profile</span>
                   </a>
                 </div>
               </div>

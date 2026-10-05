@@ -17,7 +17,7 @@ export const COFOUNDER_DATA = {
   phone: '+91 8328620294',
   quote: 'Healthcare operational excellence is achieved when hospital workflows, patient token management, and doctor care plans function in perfect alignment.',
   
-  bio: `Bandi Nandini (B. Nandini) is the Co-Founder & Head of Operations at Medynex Solutions LLP. An alumnus of Mohan Babu University, Bandi Nandini leads platform operational strategy, partner hospital onboarding, diagnostic laboratory network management, and customer experience excellence for the MediTrust ecosystem.`,
+  bio: `Bandi Nandini (B. Nandini) is the Co-Founder & Head of Operations at Medynex Solutions LLP. Leading platform operational strategy, partner hospital onboarding, diagnostic laboratory network management, and customer experience excellence for the MediTrust ecosystem.`,
   
   role: `Head of Operations at Medynex Solutions LLP. Directs hospital onboarding workflows, clinical operation compliance, customer support operations, and cross-departmental execution across all MediTrust solution verticals.`,
   
@@ -26,11 +26,11 @@ export const COFOUNDER_DATA = {
   vision: `To streamline operations across 1,000+ medical facilities in India, ensuring that every patient experiences zero wait-time anxiety and every doctor receives optimal schedule clarity.`,
   
   education: [
-    { degree: 'Bachelor of Technology (B.Tech)', institution: 'Mohan Babu University', year: 'Engineering & Operational Leadership' }
+    { degree: 'Bachelor of Technology (B.Tech)', institution: 'Premier Technology & Engineering Institute', year: 'Engineering & Operational Leadership' }
   ],
 
   timeline: [
-    { year: 'Mohan Babu Univ.', title: 'Academic Excellence', desc: 'Specialized in operations and technology systems engineering at Mohan Babu University.' },
+    { year: 'Graduate', title: 'Academic Excellence', desc: 'Specialized in technology systems and operations management with a focus on digital healthcare solutions.' },
     { year: '2024', title: 'Healthcare Operations Research', desc: 'Analyzed hospital OPD flow bottlenecks, emergency bed allocation delays, and pharmacy fulfillment processes.' },
     { year: '2025', title: 'Co-Founding Medynex Solutions', desc: 'Partnered with Shaik Afriz to co-found Medynex Solutions LLP and lead operational deployment.' },
     { year: '2026', title: 'Operational Scale for MediTrust', desc: 'Supervised smooth deployment of digital tokens, teleconsultations, and lab network integrations.' }
@@ -52,7 +52,6 @@ export const CoFounderPage: React.FC = () => {
           'name': 'Medynex Solutions LLP',
           'url': 'https://medynex.com'
         },
-        'alumniOf': 'Mohan Babu University',
         'description': 'Co-Founder & Head of Operations at Medynex Solutions LLP, directing MediTrust operational ecosystem.',
         'sameAs': [
           'https://www.linkedin.com/in/bandi-nandini-63686a379'

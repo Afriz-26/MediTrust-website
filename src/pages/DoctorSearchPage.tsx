@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'react-router-dom';
 import { Doctor } from '../types';
-import { useHealthcare } from '../context/HealthcareContext';
+import { INITIAL_DOCTORS, useHealthcare } from '../context/HealthcareContext';
 import { useLocation } from '../context/LocationContext';
-import { useLanguage } from '../context/LanguageContext';
-import { Search, MapPin, Star, Calendar, Clock, Video, Building2, CheckCircle2, Sparkles, Filter, X, Stethoscope, UserCheck, AlertCircle, ExternalLink, Loader2, Navigation } from 'lucide-react';
+import { Search, MapPin, Star, Building2, CheckCircle2, Sparkles, Filter, X, Stethoscope, AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 import { DOCTOR_SEARCH_KEYWORDS } from '../lib/seo';
-import { BookingModal } from '../components/modals/BookingModal';
-import { DemandRequestModal } from '../components/modals/DemandRequestModal';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
+import { getGoogleMapsSearchUrl } from '../lib/googleMaps';
+
+const sampleDoctorIds = new Set(INITIAL_DOCTORS.map(doctor => doctor.id));
 
 export const DoctorSearchPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { allDoctors } = useHealthcare();
   const { location, setIsLocationModalOpen } = useLocation();
-  const { t } = useLanguage();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  const urlQ = searchParams.get('q') || searchParams.get('search') || searchParams.get('query') || '';
+  const urlSpec = searchParams.get('specialty') || 'All';
+
+  const [searchTerm, setSearchTerm] = useState(urlQ);
+  const [selectedSpecialty, setSelectedSpecialty] = useState(urlSpec);
   const [selectedTierFilter, setSelectedTierFilter] = useState<'All' | 'VERIFIED' | 'EXTERNAL_DISCOVERY'>('All');
   
   const [discoveredDoctors, setDiscoveredDoctors] = useState<Doctor[]>([]);
   const [loadingDiscovery, setLoadingDiscovery] = useState(false);
-
-  const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState<Doctor | null>(null);
-  const [selectedDoctorForRequest, setSelectedDoctorForRequest] = useState<Doctor | null>(null);
 
   const specialties = [
     'All',
@@ -39,12 +40,20 @@ export const DoctorSearchPage: React.FC = () => {
     'Gynecology'
   ];
 
-  // Fetch hybrid external discovery if coordinates exist
+  // Sync state if URL search parameters change
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || searchParams.get('query');
+    const spec = searchParams.get('specialty');
+    if (q !== null && q !== searchTerm) setSearchTerm(q);
+    if (spec && specialties.includes(spec) && spec !== selectedSpecialty) setSelectedSpecialty(spec);
+  }, [searchParams]);
+
+  // Fetch hybrid external discovery if coordinates exist (debounced for fast fluid typing)
   useEffect(() => {
     let isCancelled = false;
+    setLoadingDiscovery(true);
 
-    const fetchDiscovery = async () => {
-      setLoadingDiscovery(true);
+    const timer = setTimeout(async () => {
       try {
         const queryParams = new URLSearchParams();
         if (location.latitude && location.longitude) {
@@ -57,8 +66,8 @@ export const DoctorSearchPage: React.FC = () => {
         if (selectedSpecialty !== 'All') {
           queryParams.append('specialty', selectedSpecialty);
         }
-        if (searchTerm) {
-          queryParams.append('q', searchTerm);
+        if (searchTerm.trim()) {
+          queryParams.append('q', searchTerm.trim());
         }
 
         const res = await fetch(`/api/doctors/discovery?${queryParams.toString()}`);
@@ -71,12 +80,11 @@ export const DoctorSearchPage: React.FC = () => {
       } finally {
         if (!isCancelled) setLoadingDiscovery(false);
       }
-    };
-
-    fetchDiscovery();
+    }, 200);
 
     return () => {
       isCancelled = true;
+      clearTimeout(timer);
     };
   }, [location.latitude, location.longitude, location.city, selectedSpecialty, searchTerm]);
 
@@ -85,6 +93,8 @@ export const DoctorSearchPage: React.FC = () => {
     // 1. Filter internal verified doctors
     const query = searchTerm ? searchTerm.toLowerCase().trim() : '';
     const internalList = allDoctors.filter(doc => {
+      if (sampleDoctorIds.has(doc.id)) return false;
+
       const matchesSearch = !query || 
                             (doc.name && doc.name.toLowerCase().includes(query)) || 
                             (doc.specialty && doc.specialty.toLowerCase().includes(query)) ||
@@ -96,9 +106,10 @@ export const DoctorSearchPage: React.FC = () => {
                                (doc.specialty && doc.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase()));
 
       const matchesLocation = !location?.city || 
+                              query.length > 0 ||
                               (doc.city && doc.city.toLowerCase() === location.city.toLowerCase()) || 
                               doc.city === 'All India' ||
-                              query.length > 0;
+                              !allDoctors.some(d => d.city?.toLowerCase() === location?.city?.toLowerCase());
 
       return matchesSearch && matchesSpecialty && matchesLocation;
     });
@@ -107,25 +118,25 @@ export const DoctorSearchPage: React.FC = () => {
     const externalFormatted: Doctor[] = discoveredDoctors.map(d => ({
       id: d.id,
       name: d.name,
-      specialty: d.specialty,
-      qualification: d.qualification || 'MBBS',
-      experienceYears: d.experienceYears || 5,
-      hospitalName: d.hospitalName || d.clinicName || 'Local Clinic',
-      clinicName: d.clinicName || d.hospitalName || 'Local Clinic',
-      clinicAddress: d.clinicAddress || `${d.city}, ${d.state}`,
+      specialty: d.specialty || 'Healthcare provider',
+      qualification: d.qualification || '',
+      experienceYears: d.experienceYears || 0,
+      hospitalName: d.hospitalName || d.clinicName || '',
+      clinicName: d.clinicName || d.hospitalName || '',
+      clinicAddress: d.clinicAddress || '',
       city: d.city,
       district: d.district || d.city,
       state: d.state,
       location: `${d.city}, ${d.state}`,
-      bio: d.bio || `Healthcare clinician located in ${d.city}, ${d.state}.`,
-      languages: d.languages || ['English', 'Hindi', 'Telugu'],
-      rating: d.rating || 4.2,
-      reviewCount: d.reviewCount || 10,
-      consultationFee: d.consultationFee || 400,
+      bio: d.bio || '',
+      languages: d.languages || [],
+      rating: d.rating || 0,
+      reviewCount: d.reviewCount || 0,
+      consultationFee: d.consultationFee || 0,
       availableOnline: d.availableOnline ?? false,
       availableOffline: d.availableOffline ?? true,
-      nextAvailable: d.nextAvailable || 'Pending Onboarding',
-      image: d.image || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80',
+      nextAvailable: d.nextAvailable || '',
+      image: d.image || '',
       onboardingStatus: 'Not Yet Onboarded',
       distanceKm: d.distanceKm,
       isExternalPlace: true
@@ -156,8 +167,8 @@ export const DoctorSearchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 py-10">
       <SEO
-        title="Find Doctors & Book Online Appointments | MediTrust India"
-        description="Search top verified doctors, specialists, cardiologists, pediatricians & general physicians in Hyderabad, Bengaluru, Tirupati, Chennai and across India. Book instant OPD queue tokens and online video consultations."
+        title="Find Doctors Near You | MediTrust India"
+        description="Search the MediTrust doctor directory or open current local doctor and clinic listings in Google Maps. Confirm credentials and availability directly with providers."
         keywords={DOCTOR_SEARCH_KEYWORDS}
         canonicalUrl="https://medynex.com/doctors"
       />
@@ -168,23 +179,39 @@ export const DoctorSearchPage: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2">
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono text-[11px] font-bold border border-blue-200">
-                ABDM Compliant Network
+                Healthcare Search
               </span>
-              <span className="text-xs text-slate-500 font-medium">Pan-India Tiered Discovery</span>
+              <span className="text-xs text-slate-500 font-medium">Doctor directory and local search</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 mt-1">{t('findDoctors', 'Find & Book Doctors in India')}</h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 mt-1">Find Doctors in India</h1>
             <p className="text-sm text-slate-600 mt-1">
-              Book verified OPD queue tokens or video consults in <strong className="text-blue-600">{location.city || 'your city'}</strong> ({location.state || 'India'}).
+              Search directory listings or view current local results on Google Maps. MediTrust does not offer appointment booking.
             </p>
           </div>
 
-          <button 
-            onClick={() => setIsLocationModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 flex items-center space-x-2 self-start md:self-auto transition-all shadow-xs"
-          >
-            <MapPin className="w-4 h-4 text-blue-600" />
-            <span>Location: {location.city || 'All India'}, {location.state}</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 self-start md:self-auto">
+            <a
+              href={getGoogleMapsSearchUrl([
+                searchTerm.trim() || (selectedSpecialty === 'All' ? 'doctors and clinics' : `${selectedSpecialty} doctors`),
+                location.city,
+                location.state
+              ].filter(Boolean).join(', '))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Open live results in Google Maps</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <button
+              onClick={() => setIsLocationModalOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 flex items-center justify-center space-x-2 transition-all shadow-xs"
+            >
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span>{location.city || 'All India'}, {location.state}</span>
+            </button>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
@@ -221,6 +248,35 @@ export const DoctorSearchPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Quick Specialty Filter Chips */}
+          <div className="md:col-span-12 flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+            <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+              <Stethoscope className="w-3.5 h-3.5 text-blue-600" /> Specialty:
+            </span>
+            {specialties.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setSelectedSpecialty(s);
+                  setSearchParams(prev => {
+                    const u = new URLSearchParams(prev);
+                    if (s === 'All') u.delete('specialty');
+                    else u.set('specialty', s);
+                    return u;
+                  });
+                }}
+                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                  selectedSpecialty === s
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 border border-slate-200/80'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
         </div>
 
         {/* Summary Counter & Loading */}
@@ -228,7 +284,7 @@ export const DoctorSearchPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <span>Showing <strong className="text-slate-900">{combinedDoctors.length}</strong> medical practitioners</span>
             <span className="hidden sm:inline-block">•</span>
-            <span className="text-emerald-700 font-semibold">{verifiedCount} Active MediTrust Partners</span>
+            <span className="text-emerald-700 font-semibold">{verifiedCount} MediTrust directory listings</span>
             <span className="hidden sm:inline-block">•</span>
             <span className="text-amber-700 font-semibold">{externalCount} Nearby Establishments</span>
           </div>
@@ -279,12 +335,12 @@ export const DoctorSearchPage: React.FC = () => {
                     {isOnboarded ? (
                       <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200 flex items-center space-x-1">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>Verified MediTrust Clinician</span>
+                        <span>MediTrust Directory Listing</span>
                       </span>
                     ) : (
                       <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-[10px] font-mono font-bold border border-amber-200 flex items-center space-x-1">
                         <Sparkles className="w-3 h-3 text-amber-600" />
-                        <span>Nearby Healthcare Clinic</span>
+                        <span>Google Maps Listing</span>
                       </span>
                     )}
 
@@ -297,11 +353,17 @@ export const DoctorSearchPage: React.FC = () => {
 
                   {/* Profile info */}
                   <div className="flex items-start space-x-4">
-                    <img src={doctor.image} alt={doctor.name} className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shrink-0 bg-slate-100" />
+                    {doctor.image ? (
+                      <img src={doctor.image} alt={doctor.name} className="w-16 h-16 rounded-2xl object-cover border border-slate-200 shrink-0 bg-slate-100" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl border border-slate-200 shrink-0 bg-slate-100 flex items-center justify-center">
+                        <Stethoscope className="w-7 h-7 text-slate-400" />
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <h3 className="text-base font-bold text-slate-900 leading-snug">{doctor.name}</h3>
                       <div className="text-xs font-semibold text-blue-600">{doctor.specialty}</div>
-                      <div className="text-xs text-slate-500 font-medium">{doctor.qualification}</div>
+                      {doctor.qualification && <div className="text-xs text-slate-500 font-medium">{doctor.qualification}</div>}
                       {doctor.rating > 0 && (
                         <div className="flex items-center space-x-1 text-xs text-amber-500 pt-0.5">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -315,7 +377,7 @@ export const DoctorSearchPage: React.FC = () => {
                   <div className="mt-4 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
                     <div className="flex items-center space-x-2">
                       <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span className="truncate font-medium">{doctor.hospitalName || doctor.clinicName}</span>
+                      <span className="truncate font-medium">{doctor.hospitalName || doctor.clinicName || 'Healthcare location'}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -323,7 +385,7 @@ export const DoctorSearchPage: React.FC = () => {
                         <span className="truncate">{doctor.city || 'Hyderabad'}, {doctor.district || doctor.state}</span>
                       </div>
                       <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((doctor.clinicAddress || doctor.hospitalName) + ', ' + doctor.city)}`}
+                        href={getGoogleMapsSearchUrl([doctor.name, doctor.clinicAddress || doctor.hospitalName, doctor.city, doctor.state].filter(Boolean).join(', '))}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center space-x-1 font-mono hover:underline shrink-0"
@@ -332,38 +394,6 @@ export const DoctorSearchPage: React.FC = () => {
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="mt-5 pt-3 border-t border-slate-100">
-                    {isOnboarded ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-slate-500 font-medium">Consultation Fee: <strong className="text-emerald-700 text-sm font-bold">₹{doctor.consultationFee}</strong></span>
-                          <span className="text-[10px] font-mono text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded">{doctor.nextAvailable || 'Today Available'}</span>
-                        </div>
-                        <button
-                          onClick={() => setSelectedDoctorForBooking(doctor)}
-                          className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center space-x-1.5"
-                        >
-                          <Calendar className="w-4 h-4" />
-                          <span>Book OPD / Video Consult</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                          Healthcare clinic discovered via Google Places. Request doctor onboarding to enable instant OPD queue token booking.
-                        </p>
-                        <button
-                          onClick={() => setSelectedDoctorForRequest(doctor)}
-                          className="w-full py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold border border-amber-300 transition-all flex items-center justify-center space-x-1.5"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <span>Request to Onboard Doctor</span>
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                 </motion.div>
@@ -378,37 +408,22 @@ export const DoctorSearchPage: React.FC = () => {
             <Stethoscope className="w-12 h-12 text-slate-400 mx-auto" />
             <h3 className="text-lg font-bold text-slate-900">No doctors found</h3>
             <p className="text-xs text-slate-500">
-              No medical practitioners found matching "{searchTerm}". Try clearing search or switching city.
+              No MediTrust directory matches were found. Open Google Maps for current local listings and confirm details directly with the provider.
             </p>
-            <button
-              onClick={() => { setSearchTerm(''); setSelectedSpecialty('All'); setSelectedTierFilter('All'); }}
-              className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl"
+            <a
+              href={getGoogleMapsSearchUrl([
+                searchTerm.trim() || (selectedSpecialty === 'All' ? 'doctors and clinics' : `${selectedSpecialty} doctors`),
+                location.city,
+                location.state
+              ].filter(Boolean).join(', '))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl"
             >
-              Reset Filters
-            </button>
+              Search Google Maps
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           </div>
-        )}
-
-        {/* Booking & Demand Modals */}
-        <BookingModal
-          doctor={selectedDoctorForBooking}
-          isOpen={!!selectedDoctorForBooking}
-          onClose={() => setSelectedDoctorForBooking(null)}
-        />
-
-        {selectedDoctorForRequest && (
-          <DemandRequestModal
-            provider={{
-              id: selectedDoctorForRequest.id,
-              name: selectedDoctorForRequest.name,
-              type: 'Doctor',
-              city: selectedDoctorForRequest.city,
-              area: selectedDoctorForRequest.area,
-              specialty: selectedDoctorForRequest.specialty
-            }}
-            isOpen={!!selectedDoctorForRequest}
-            onClose={() => setSelectedDoctorForRequest(null)}
-          />
         )}
 
       </div>

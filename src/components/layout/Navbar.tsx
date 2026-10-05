@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
       <header className={`sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-transform duration-300 shadow-xs ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-2">
             
             {/* Logo & Location Bar */}
@@ -104,21 +104,21 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsLocationModalOpen(true)}
                 id="btn-nav-location"
                 title="Change Healthcare Search Location"
-                className="hidden md:flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100/80 text-xs font-semibold transition-all shadow-xs"
+                className="hidden md:flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#edf4ed] border border-[#c9ddd0] text-[#315b46] hover:bg-[#e2eee4] text-xs font-semibold transition-all shadow-xs"
               >
-                <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                <MapPin className="w-3.5 h-3.5 text-[#34764f]" />
                 <span className="max-w-[130px] truncate">{location.city || 'Hyderabad'}, {location.state?.substring(0, 2).toUpperCase() || 'TS'}</span>
                 <ChevronDown className="w-3 h-3 text-blue-600" />
               </button>
             </div>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center space-x-1" id="desktop-nav-menu">
+            <nav className="hidden 2xl:flex items-center space-x-1" id="desktop-nav-menu">
               <Link 
                 to="/" 
                 id="nav-home"
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isLinkActive('/') ? 'text-blue-600 bg-blue-50 font-semibold border border-blue-200/60' : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'
+                  isLinkActive('/') ? 'text-[#286846] bg-[#edf4ed] font-semibold border border-[#d7e5d9]' : 'text-slate-700 hover:text-[#286846] hover:bg-slate-50'
                 }`}
               >
                 Home
@@ -213,9 +213,9 @@ export const Navbar: React.FC = () => {
               <Link 
                 to="/ai-assistant" 
                 id="nav-ai-assistant"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200/80 flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-[#286846] hover:text-[#1e5b3c] bg-[#edf4ed] border border-[#d7e5d9] flex items-center gap-1.5"
               >
-                <Bot className="w-4 h-4 text-blue-600" />
+                <Bot className="w-4 h-4 text-[#34764f]" />
                 <span>AI Assistant</span>
               </Link>
 
@@ -224,7 +224,7 @@ export const Navbar: React.FC = () => {
             </nav>
 
             {/* Right Controls: Theme Accent + Language Pill + Notification Bell + Dashboard/Auth */}
-            <div className="hidden lg:flex items-center space-x-2.5" id="desktop-user-actions">
+            <div className="hidden 2xl:flex items-center space-x-2.5" id="desktop-user-actions">
               
               {/* Theme Accent Selector Button */}
               <button
@@ -271,7 +271,7 @@ export const Navbar: React.FC = () => {
                   <Link 
                     to={getDashboardPath()} 
                     id="nav-go-dashboard"
-                    className="px-4 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/20 flex items-center space-x-2"
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-[#27714d] text-white hover:bg-[#1e5b3c] shadow-md shadow-emerald-900/15 flex items-center space-x-2"
                   >
                     <LayoutDashboard className="w-4 h-4" />
                     <span className="capitalize">{user.role} Dashboard</span>
@@ -297,7 +297,7 @@ export const Navbar: React.FC = () => {
                   <Link 
                     to="/register" 
                     id="btn-nav-register"
-                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20 flex items-center space-x-1.5"
+                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#27714d] text-white hover:bg-[#1e5b3c] transition-colors shadow-md shadow-emerald-900/15 flex items-center space-x-1.5"
                   >
                     <Sparkles className="w-4 h-4" />
                     <span>Register</span>
@@ -307,10 +307,10 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Mobile Menu Toggle Button */}
-            <div className="flex xl:hidden items-center space-x-2">
+            <div className="flex 2xl:hidden items-center space-x-2">
               <button
                 onClick={() => setIsLocationModalOpen(true)}
-                className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center"
+                className="hidden sm:flex p-2 rounded-xl bg-[#edf4ed] text-[#315b46] border border-[#c9ddd0] text-xs font-semibold items-center"
               >
                 <MapPin className="w-4 h-4" />
               </button>
@@ -419,4 +419,3 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
-

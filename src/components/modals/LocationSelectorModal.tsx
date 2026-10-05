@@ -35,6 +35,7 @@ export const LocationSelectorModal: React.FC = () => {
   const [liveSuggestions, setLiveSuggestions] = useState<AutoSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loadingGps, setLoadingGps] = useState(false);
+  const [gpsError, setGpsError] = useState('');
   const [activeTab, setActiveTab] = useState<'search' | 'manual'>('search');
 
   const [selectedState, setSelectedState] = useState(location.state || 'Andhra Pradesh');
@@ -113,11 +114,14 @@ export const LocationSelectorModal: React.FC = () => {
 
   const handleUseGPS = async () => {
     setLoadingGps(true);
+    setGpsError('');
     try {
       await requestGPSLocation();
+      setIsLocationModalOpen(false);
+    } catch (err) {
+      setGpsError(err instanceof Error ? err.message : 'Could not detect your location. Please choose a city manually.');
     } finally {
       setLoadingGps(false);
-      setIsLocationModalOpen(false);
     }
   };
 
@@ -185,6 +189,11 @@ export const LocationSelectorModal: React.FC = () => {
               <Compass className="w-5 h-5 text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity" />
             )}
           </button>
+          {gpsError && (
+            <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+              {gpsError}
+            </p>
+          )}
 
           {/* Tab Selection */}
           <div className="flex rounded-2xl bg-[#0B1120] p-1 border border-slate-800">

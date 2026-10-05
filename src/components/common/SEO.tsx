@@ -119,8 +119,8 @@ export const SEO: React.FC<SEOProps> = ({
             'slogan': 'Innovating Healthcare Through Technology',
             'logo': 'https://medynex.com/logo.png',
             'sameAs': [
-              'https://linkedin.com/in/shaik-afriz-a49311385',
-              'https://github.com/shaik-afriz'
+              'https://www.linkedin.com/in/shaik-afriz-a49311385',
+              'https://github.com/'
             ]
           },
           {

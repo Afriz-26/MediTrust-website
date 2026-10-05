@@ -90,7 +90,11 @@ export const BlogPostPage: React.FC = () => {
           <img
             src={article.imageUrl}
             alt={article.title}
+            referrerPolicy="no-referrer"
             className="w-full h-80 sm:h-96 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/src/assets/images/hero_medical_center_1790873027526.jpg';
+            }}
           />
         </div>
 

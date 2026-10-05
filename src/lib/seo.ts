@@ -41,7 +41,6 @@ export const FOUNDER_KEYWORDS = [
   'Student entrepreneur',
   'HealthTech founder',
   'Shaik Afriz CEO',
-  'Mohan Babu University alumnus',
   'Healthcare AI Innovator'
 ];
 
@@ -170,8 +169,8 @@ export function updateSEO({
           'slogan': 'Innovating Healthcare Through Technology',
           'logo': 'https://medynex.com/logo.png',
           'sameAs': [
-            'https://linkedin.com/in/shaik-afriz-a49311385',
-            'https://github.com/shaik-afriz'
+            'https://www.linkedin.com/in/shaik-afriz-a49311385',
+            'https://github.com/'
           ],
           'contactPoint': {
             '@type': 'ContactPoint',
@@ -185,10 +184,9 @@ export function updateSEO({
             '@type': 'Person',
             'name': 'Shaik Afriz',
             'jobTitle': 'Founder & Chief Executive Officer',
-            'alumniOf': 'Mohan Babu University',
             'sameAs': [
-              'https://linkedin.com/in/shaik-afriz-a49311385',
-              'https://github.com/shaik-afriz'
+              'https://www.linkedin.com/in/shaik-afriz-a49311385',
+              'https://github.com/'
             ]
           }
         },

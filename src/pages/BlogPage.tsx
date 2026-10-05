@@ -108,7 +108,11 @@ export const BlogPage: React.FC = () => {
                   <img
                     src={article.imageUrl}
                     alt={article.title}
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/src/assets/images/hero_medical_center_1790873027526.jpg';
+                    }}
                   />
                   <div className="absolute top-3 left-3 bg-[#0B1120]/90 backdrop-blur-md px-3 py-1 rounded-full border border-slate-800 text-xs font-mono font-semibold text-cyan-400">
                     {article.category}

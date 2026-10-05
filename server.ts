@@ -1,9 +1,6 @@
 import dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import { ConversationService } from './server/services/ConversationService';
@@ -20,8 +17,8 @@ import { HealthcareDiscoveryService } from './server/services/HealthcareDiscover
 import { withRetry } from './server/utils/retry';
 import { cleanBase64Data, sanitizeMimeType } from './server/utils/base64';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const projectRoot = process.cwd();
+dotenv.config({ path: [path.join(projectRoot, '.env.local'), path.join(projectRoot, '.env')] });
 
 async function startServer() {
   const app = express();
@@ -30,28 +27,6 @@ async function startServer() {
   app.use(express.json({ limit: '20mb' }));
 
   // Shared Gemini Client setup
-  const PLACEHOLDER_API_KEYS = [
-    'MY_GEMINI_API_KEY',
-    'your_gemini_api_key_here',
-    'your-gemini-api-key',
-    'YOUR_API_KEY',
-    'REPLACE_WITH_YOUR_KEY',
-    'your-supabase-anon-key',
-  ];
-
-  const hasValidGeminiApiKey = (): boolean => {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
-    if (!apiKey) {
-      return false;
-    }
-    const isPlaceholder = PLACEHOLDER_API_KEYS.some(p => apiKey.includes(p)) || apiKey === '';
-    if (isPlaceholder) {
-      console.warn('GEMINI_API_KEY is set to a placeholder or empty value. Falling back to default response mode.');
-      return false;
-    }
-    return true;
-  };
-
   const getGeminiClient = () => {
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
     if (!apiKey) {
@@ -195,6 +170,82 @@ async function startServer() {
     }
   });
 
+  // Clinical Drug Monograph & Verified Online Legal Data Endpoint
+  app.get('/api/medicines/clinical/monograph', async (req, res) => {
+    try {
+      const query = (req.query.query as string) || (req.query.q as string) || '';
+      if (!query.trim()) {
+        return res.status(400).json({ error: 'Query parameter is required' });
+      }
+
+      // 1. Check local detailed database first
+      const localResult = MedicineService.search(query.trim());
+      if (localResult) {
+        return res.json({
+          source: 'Verified Clinical Database',
+          monograph: localResult
+        });
+      }
+
+      // 2. If not in hardcoded seed, query Gemini for a medically-grounded official monograph
+      const aiClient = getGeminiClient();
+      const prompt = `You are a clinical pharmacologist and medical regulatory officer for India (CDSCO / DPCO) and international medicine registries (FDA/WHO).
+Generate an authoritative, factual, legal drug monograph for the medicine requested: "${query}".
+
+Return ONLY valid JSON matching this schema:
+{
+  "name": "Generic Name (e.g. Paracetamol)",
+  "brandNames": ["Brand 1", "Brand 2"],
+  "drugClass": "Pharmacological class",
+  "therapeuticCategory": "Therapeutic area",
+  "uses": "Exact clinical indications and what it treats",
+  "howItWorks": "Mechanism of action in accessible medical terms",
+  "dosageRanges": "Standard adult dosage and frequency",
+  "howToUse": "Specific instructions on administration (with food, timing, duration)",
+  "commonSideEffects": ["Mild side effect 1", "Mild side effect 2"],
+  "seriousSideEffects": ["Serious side effect 1", "Emergency symptom 2"],
+  "precautions": {
+    "pregnancy": "Clear safety category and advice",
+    "breastfeeding": "Safety during lactation",
+    "kidney": "Renal adjustments or cautions",
+    "liver": "Hepatic cautions"
+  },
+  "storage": "Storage temperature and moisture advice",
+  "missedDose": "Advice if a dose is skipped",
+  "overdoseWarning": "Overdose signs and emergency instructions",
+  "prescriptionStatus": "Schedule H (Prescription Required)" or "Schedule H1" or "Over-The-Counter (OTC)"
+}`;
+
+      const aiResponse = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.1,
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const responseText = aiResponse.text || '{}';
+      const parsedData = JSON.parse(responseText);
+
+      return res.json({
+        source: 'Live Regulatory & Medical Grounding Mesh',
+        monograph: {
+          id: query.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          ...parsedData
+        }
+      });
+    } catch (err: any) {
+      console.error('[API Clinical Monograph Error]:', err);
+      // Fallback response with paracetamol as demo if AI fails
+      const fallback = MedicineService.search(req.query.query as string || 'paracetamol');
+      if (fallback) {
+        return res.json({ source: 'Fallback Clinical Registry', monograph: fallback });
+      }
+      res.status(500).json({ error: 'Failed to retrieve drug monograph', details: err.message });
+    }
+  });
+
   // ==========================================
   // HYBRID HEALTHCARE DISCOVERY & ONBOARDING
   // ==========================================
@@ -322,25 +373,21 @@ async function startServer() {
   // Streaming SSE Endpoint for sub-second character typing animation
   app.post('/api/gemini/stream', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders?.();
 
     try {
-      const { messages = [], language = 'English', model = 'gemini-3.6-flash' } = req.body;
-
-      // If no valid API key is configured, send fallback response directly
-      // to avoid HTTP 500 errors from failed API calls
-      if (!hasValidGeminiApiKey()) {
-        const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
-        const fallbackText = generateSmartClinicalFallback(lastUserMsg || 'Hello', messages as any[], language);
-        res.write(`data: ${JSON.stringify({ text: fallbackText })}\n\n`);
-        res.write(`data: ${JSON.stringify({ text: SafetyLayer.getDisclaimerBanner(language) })}\n\n`);
-        res.write(`data: [DONE]\n\n`);
-        res.end();
-        return;
-      }
-
-      for await (const token of ConversationService.generateStreamResponse(messages, language, model)) {
+      const {
+        messages = [],
+        language = 'English',
+        model = 'gemini-3.8-flash',
+        enableSearch = false,
+        enableMaps = false
+      } = req.body;
+      
+      for await (const token of ConversationService.generateStreamResponse(messages, language, model, { enableSearch, enableMaps })) {
         res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
       }
 
@@ -351,9 +398,16 @@ async function startServer() {
       const errorStatus = err?.status || err?.code || '';
       const errorDetails = err?.response?.data || err?.error || err?.response || '';
       console.error(`[SSE Stream Error] Status: ${errorStatus} | Message: ${errorMessage}`, errorDetails);
-      // Send error as SSE data (HTTP 200) so the client can display a friendly fallback
-      res.write(`data: ${JSON.stringify({ text: `I am temporarily unable to reach the Gemini server (HTTP_${errorStatus || 500}). Please check your connection or try again shortly.` })}\n\n`);
-      res.write(`data: [DONE]\n\n`);
+      const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
+      const userMessage = messages.filter((entry: any) => entry?.role === 'user').pop()?.content || '';
+      const providerNotice = Number(errorStatus) === 429 || /RESOURCE_EXHAUSTED|quota/i.test(errorMessage)
+        ? '**Gemini is temporarily unavailable because its usage quota has been reached.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.'
+        : Number(errorStatus) === 503 || /UNAVAILABLE|high demand|overloaded/i.test(errorMessage)
+          ? '**Gemini is temporarily busy.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.'
+          : '**Gemini is temporarily unavailable.** I’ll answer using MediTrust’s offline reference instead; it may not cover every question.';
+      const fallbackText = generateSmartClinicalFallback(userMessage, messages.slice(0, -1), req.body?.language || 'English');
+      res.write(`data: ${JSON.stringify({ text: `${providerNotice}\n\n${fallbackText}` })}\n\n`);
+      res.write('data: [DONE]\n\n');
       res.end();
     }
   });
@@ -382,6 +436,11 @@ async function startServer() {
 function generateSmartClinicalFallback(message: string, history: any[], language: string = 'English'): string {
   const lowerMsg = message.toLowerCase().trim();
 
+  const emergency = SafetyLayer.analyzeEmergency(message);
+  if (emergency.isEmergency && emergency.severityLevel === 'CRITICAL') {
+    return `🚨 **Seek emergency care now.** ${emergency.immediateGuidance}\n\nCall **108** in India or go to the nearest emergency department. Do not wait for an online response.`;
+  }
+
   // Greetings
   if (/^(hello|hi|hey|greetings|good morning|good afternoon|good evening|namaste|hi there)$/i.test(lowerMsg)) {
     if (language.includes('Telugu')) {
@@ -389,16 +448,26 @@ function generateSmartClinicalFallback(message: string, history: any[], language
 
 మీరు క్రింది అంశాల గురించి నన్ను అడగవచ్చు:
 - **లక్షణాల విశ్లేషణ (Symptom Triage)**
-- **సమీప డాక్టర్లు & హాస్పిటల్స్ అపాయింట్‌మెంట్**
+- **సమీప డాక్టర్లు & హాస్పిటల్స్ శోధన**
 - **మందుల వివరాలు & మోతాదు**
 - **లాబొరేటరీ టెస్ట్‌లు & హోమ్ శాంపిల్ కలెక్షన్**`;
+    }
+
+    const medicine = MedicineService.search(message);
+    if (medicine) {
+return `### Medicine reference: ${medicine.name}\n\n- **Also known as:** ${medicine.brandNames.join(', ')}\n- **Medicine class:** ${medicine.drugClass}\n- **Common uses:** ${medicine.uses}\n- **General dosage information:** ${medicine.dosageRanges}\n- **Common side effects:** ${medicine.commonSideEffects.join(', ')}\n- **Important precautions:** ${medicine.precautions.pregnancy} Pregnancy; ${medicine.precautions.kidney} Kidney; ${medicine.precautions.liver} Liver.\n\nThis is general reference information, not a personal dosing recommendation. Follow your prescription and check with a doctor or pharmacist, especially for children, pregnancy, chronic conditions, or other medicines.`;
+    }
+
+    const topic = MedicalKnowledgeService.searchKnowledge(message);
+    if (topic) {
+return `### ${topic.title}\n\n${topic.overview}\n\n**Common symptoms:** ${topic.symptoms.join('; ')}\n\n**Care and treatment information:** ${topic.treatmentOptions.join('; ')}\n\n**Seek urgent help for:** ${topic.emergencySigns.join('; ')}\n\nThis is educational information and cannot diagnose an individual.`;
     }
     if (language.includes('Hindi')) {
       return `नमस्ते! मैं **MediTrust AI क्लिनिकल असिस्टेंट** हूँ। आज मैं आपकी स्वास्थ्य संबंधी किस प्रकार सहायता कर सकता हूँ?
 
 आप मुझसे निम्नलिखित के बारे में पूछ सकते हैं:
 - **लक्षणों का मूल्यांकन (Symptom Triage)**
-- **डॉक्टर एवं अस्पताल अपॉइंटमेंट**
+- **डॉक्टर एवं अस्पताल खोज**
 - **दवाइयों की जानकारी एवं खुराक**
 - **लैब टेस्ट एवं होम सैंपल कलेक्शन**`;
     }
@@ -406,7 +475,7 @@ function generateSmartClinicalFallback(message: string, history: any[], language
 
 Feel free to ask me about:
 - **Symptom Triage & Guidance** (e.g. fever, headache, stomach pain)
-- **Finding Doctors & OPD Appointments** in Tirupati, Hyderabad, Bengaluru, etc.
+- **Finding Doctors & Hospitals** in your city
 - **Medicine Information & Side Effects**
 - **Laboratory Diagnostics & Home Sample Collection**`;
   }
@@ -474,39 +543,12 @@ To assess your headache better, **could you share:**
 
   // Doctor / Hospital search query
   if (lowerMsg.includes('doctor') || lowerMsg.includes('hospital') || lowerMsg.includes('appointment') || lowerMsg.includes('tirupati') || lowerMsg.includes('hyderabad') || lowerMsg.includes('cardiologist') || lowerMsg.includes('dermatologist')) {
-    return `### 👩‍⚕️ MediTrust Doctor & OPD Booking Search
-
-MediTrust connects you with top certified specialists in **Tirupati, Hyderabad, Bengaluru, Chennai**, and surrounding regions.
-
-#### Top Recommended Doctors:
-| Doctor Name | Specialty | Location | Experience | Fee |
-| :--- | :--- | :--- | :--- | :--- |
-| **Dr. Suresh Babu** | Cardiology | SVIMS / Alipiri, Tirupati | 15 Yrs | ₹700 |
-| **Dr. K. Radhika Rao** | Dermatology | MR Palli, Tirupati | 11 Yrs | ₹600 |
-| **Dr. Ramesh Kumar Reddy** | Orthopedics | Renigunta Road, Tirupati | 20 Yrs | ₹800 |
-| **Dr. Ananya Sharma** | Cardiology | Banjara Hills, Hyderabad | 14 Yrs | ₹800 |
-
-👉 **How to book:**
-Use our **Find Doctors** page to view live OPD token slots, check verified doctor profiles, or request onboarding for non-partnered clinics near you!`;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(message)}`;
+    return `### Find a doctor or clinic\n\nI can’t verify live provider listings, credentials, opening hours, or availability from the offline assistant, and MediTrust booking is not available. [Search this request on Google Maps](${mapsUrl}), then contact the provider directly to confirm their qualifications and current availability.`;
   }
 
   // Default structured clinical assistant response
-  return `Thank you for consulting **MediTrust AI Clinical Assistant**.
-
-Regarding your query about **"${message}"**:
-
-### 📋 Clinical Overview:
-- **Primary Consideration:** Healthcare queries benefit from structured evaluation, considering symptom duration, medical history, and current medications.
-- **Guidance:** Ensure adequate hydration, proper rest, and regular health monitoring.
-
----
-
-### 🩺 What would you like to do next?
-1. **Find Doctors:** Search OPD token availability in Tirupati, Hyderabad, or your city.
-2. **Ask Follow-up Questions:** Provide details on symptoms, duration, or age.
-3. **Verify Medicine:** Scan your prescription or search medicine details & dosages.
-
-*Disclaimer: MediTrust AI provides medical information for educational purposes and triage guidance. Always consult a certified doctor for clinical diagnosis and emergency care.*`;
+  return `The live AI service is unavailable, and I don’t have a matching entry for that question in the offline reference. I don’t want to guess.\n\nPlease try asking about a medicine name, fever, headache, cough or sore throat, blood pressure, diabetes, or finding a doctor. For symptom guidance, include the person's age, symptoms, and how long they have been present. For urgent symptoms, contact emergency services.`;
 }
 
   // 1. AI Assistant Chat Endpoint (Support Grounded Search, Maps, and Thinking Mode)
@@ -519,7 +561,8 @@ Regarding your query about **"${message}"**:
         return;
       }
 
-      if (!hasValidGeminiApiKey()) {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
         // Fallback clinical response if key is missing
         res.json({
           text: generateSmartClinicalFallback(message, history, language),
@@ -551,11 +594,11 @@ Always maintain a caring, professional, trustworthy tone. Always remind users th
 If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupati, Hyderabad, Chennai, Bangalore, etc.), provide clear, helpful recommendations.`;
 
       if (thinkingMode) {
-        // Use gemini-3.6-flash with High Thinking Level for deep clinical reasoning
+        // Use gemini-3.8-flash with High Thinking Level for deep clinical reasoning
         const response = await withRetry(async () => {
           try {
             return await ai.models.generateContent({
-              model: 'gemini-3.6-flash',
+              model: 'gemini-3.8-flash',
               contents: [
                 {
                   role: 'user',
@@ -569,9 +612,9 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
               }
             });
           } catch (tErr: any) {
-            console.warn(`[Gemini Thinking Chat] Fallback to standard 3.6-flash: ${tErr?.message}`);
+            console.warn(`[Gemini Thinking Chat] Fallback to standard 3.8-flash: ${tErr?.message}`);
             return await ai.models.generateContent({
-              model: 'gemini-3.6-flash',
+              model: 'gemini-3.8-flash',
               contents: [
                 {
                   role: 'user',
@@ -581,9 +624,9 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
             });
           }
         }, { 
-          maxRetries: 3,
+          maxRetries: 2,
           onRetry: (err, attempt, delayMs) => {
-            console.warn(`[Gemini Thinking Chat Retry ${attempt}/3] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
+            console.warn(`[Gemini Thinking Chat Retry ${attempt}/2] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
           }
         });
 
@@ -603,7 +646,7 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
         tools.push({ googleSearch: {} });
       }
 
-      const model = 'gemini-3.6-flash';
+      const model = 'gemini-3.8-flash';
 
       const contents: any[] = history.map((item: { sender: string; text: string }) => ({
         role: item.sender === 'user' ? 'user' : 'model',
@@ -664,7 +707,8 @@ If the user asks about doctors, hospitals, or pharmacies in India (e.g., Tirupat
         return;
       }
 
-      if (!hasValidGeminiApiKey()) {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
         res.json({
           analysis: {
             skinTypeEstimated: 'Combination / Sensitive Skin',
@@ -705,7 +749,7 @@ Return a structured JSON object.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.8-flash',
           contents: { parts: [imagePart, promptPart] },
           config: {
             responseMimeType: 'application/json',
@@ -726,9 +770,9 @@ Return a structured JSON object.`
           }
         });
       }, { 
-        maxRetries: 3,
+        maxRetries: 2,
         onRetry: (err, attempt, delayMs) => {
-          console.warn(`[Gemini Skin Scan Retry ${attempt}/3] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
+          console.warn(`[Gemini Skin Scan Retry ${attempt}/2] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
         }
       });
 
@@ -762,7 +806,8 @@ Return a structured JSON object.`
     try {
       const { query, barcode, imageBase64 } = req.body;
 
-      if (!hasValidGeminiApiKey()) {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
         res.json({
           medicine: {
             name: query || 'Telmisartan 40mg',
@@ -804,7 +849,7 @@ Format as clean structured JSON.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.8-flash',
           contents: { parts },
           config: {
             responseMimeType: 'application/json',
@@ -824,9 +869,9 @@ Format as clean structured JSON.`
           }
         });
       }, { 
-        maxRetries: 3,
+        maxRetries: 2,
         onRetry: (err, attempt, delayMs) => {
-          console.warn(`[Gemini Verify Medicine Retry ${attempt}/3] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
+          console.warn(`[Gemini Verify Medicine Retry ${attempt}/2] ${err?.message || err}. Retrying in ${Math.round(delayMs)}ms...`);
         }
       });
 
@@ -862,7 +907,8 @@ Format as clean structured JSON.`
         return;
       }
 
-      if (!hasValidGeminiApiKey()) {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
         res.json({ text: 'I am looking for an offline cardiologist near Tirupati for a routine checkup.' });
         return;
       }
@@ -881,7 +927,7 @@ Format as clean structured JSON.`
 
       const response = await withRetry(async () => {
         return await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
+          model: 'gemini-3.5-transcribe',
           contents: {
             parts: [
               audioPart,
@@ -957,7 +1003,7 @@ Format as clean structured JSON.`
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(__dirname, 'dist');
+    const distPath = path.join(projectRoot, 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

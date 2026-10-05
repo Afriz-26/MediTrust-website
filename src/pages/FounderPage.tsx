@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Award, GraduationCap, Compass, Milestone, Quote, Sparkles, Building, ArrowUpRight, User, Heart, ShieldCheck } from 'lucide-react';
+import { Award, GraduationCap, Compass, Milestone, Quote, Sparkles, Building, ArrowUpRight, User, Heart, ShieldCheck, Linkedin, Github, Mail } from 'lucide-react';
 import { SEO } from '../components/common/SEO';
 
 export const FOUNDER_DATA = {
@@ -9,6 +9,9 @@ export const FOUNDER_DATA = {
   company: 'Medynex Solutions',
   platform: 'MediTrust',
   location: 'Kanigiri, Andhra Pradesh, India',
+  email: 'medynexsolutions26@gmail.com',
+  linkedinUrl: 'https://www.linkedin.com/in/shaik-afriz-a49311385',
+  githubUrl: 'https://github.com/',
   father: 'Shaik Ahammad Basha',
   mother: 'Shaik Arshiya',
   initials: 'SA',
@@ -67,6 +70,34 @@ export const FounderPage: React.FC = () => {
               <div className="pt-4 border-t border-[#E7EAE7] text-xs text-[#737A78] space-y-1">
                 <div>Origin: <strong>{FOUNDER_DATA.location}</strong></div>
                 <div>Platform: <strong>{FOUNDER_DATA.platform}</strong></div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <a 
+                  href={FOUNDER_DATA.linkedinUrl} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <Linkedin className="w-3.5 h-3.5" />
+                  <span>LinkedIn</span>
+                </a>
+                <a 
+                  href={FOUNDER_DATA.githubUrl} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-900 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  <span>GitHub</span>
+                </a>
+                <a 
+                  href={`mailto:${FOUNDER_DATA.email}`} 
+                  className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-600 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email</span>
+                </a>
               </div>
             </div>
           </div>

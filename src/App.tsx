@@ -9,43 +9,42 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
-// Pages
-import { HomePage } from './pages/HomePage';
-import { AboutMedynexPage } from './pages/AboutMedynexPage';
-import { AboutMediTrustPage } from './pages/AboutMediTrustPage';
-import { FounderPage } from './pages/FounderPage';
-import { CoFounderPage } from './pages/CoFounderPage';
-import { ServicesPage } from './pages/ServicesPage';
-import { WhyMediTrustPage } from './pages/WhyMediTrustPage';
-import { TeamPage } from './pages/TeamPage';
-import { DoctorSearchPage } from './pages/DoctorSearchPage';
-import { PharmacySearchPage } from './pages/PharmacySearchPage';
-import { MedicineSearchPage } from './pages/MedicineSearchPage';
-import { HowItWorksPage } from './pages/HowItWorksPage';
-import { ForDoctorsPage } from './pages/ForDoctorsPage';
-import { ForPharmaciesPage } from './pages/ForPharmaciesPage';
-import { AiAssistantPage } from './pages/AiAssistantPage';
-import { NewsPage } from './pages/NewsPage';
-import { BlogPage } from './pages/BlogPage';
-import { BlogPostPage } from './pages/BlogPostPage';
-import { LocationDirectoryPage } from './pages/LocationDirectoryPage';
-import { LocationSpecificPage } from './pages/LocationSpecificPage';
-import { CareersPage } from './pages/CareersPage';
-import { InternshipPage } from './pages/InternshipPage';
-import { ContactPage } from './pages/ContactPage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { AdminLoginPage } from './pages/AdminLoginPage';
-
-// Dashboards
-import { PatientDashboard } from './pages/dashboards/PatientDashboard';
-import { DoctorDashboard } from './pages/dashboards/DoctorDashboard';
-import { PharmacyDashboard } from './pages/dashboards/PharmacyDashboard';
-import { AdminDashboard } from './pages/dashboards/AdminDashboard';
-
-import { ServerErrorPage } from './pages/errors/ServerErrorPage';
-import { UnauthorizedPage } from './pages/errors/UnauthorizedPage';
-import { NotFoundPage } from './pages/errors/NotFoundPage';
+// Load route-specific code only when the page is visited.
+const HomePage = React.lazy(() => import('./pages/HomePage').then(({ HomePage }) => ({ default: HomePage })));
+const AboutMedynexPage = React.lazy(() => import('./pages/AboutMedynexPage').then(({ AboutMedynexPage }) => ({ default: AboutMedynexPage })));
+const AboutMediTrustPage = React.lazy(() => import('./pages/AboutMediTrustPage').then(({ AboutMediTrustPage }) => ({ default: AboutMediTrustPage })));
+const FounderPage = React.lazy(() => import('./pages/FounderPage').then(({ FounderPage }) => ({ default: FounderPage })));
+const CoFounderPage = React.lazy(() => import('./pages/CoFounderPage').then(({ CoFounderPage }) => ({ default: CoFounderPage })));
+const ServicesPage = React.lazy(() => import('./pages/ServicesPage').then(({ ServicesPage }) => ({ default: ServicesPage })));
+const WhyMediTrustPage = React.lazy(() => import('./pages/WhyMediTrustPage').then(({ WhyMediTrustPage }) => ({ default: WhyMediTrustPage })));
+const TeamPage = React.lazy(() => import('./pages/TeamPage').then(({ TeamPage }) => ({ default: TeamPage })));
+const DoctorSearchPage = React.lazy(() => import('./pages/DoctorSearchPage').then(({ DoctorSearchPage }) => ({ default: DoctorSearchPage })));
+const PharmacySearchPage = React.lazy(() => import('./pages/PharmacySearchPage').then(({ PharmacySearchPage }) => ({ default: PharmacySearchPage })));
+const HospitalSearchPage = React.lazy(() => import('./pages/HospitalSearchPage').then(({ HospitalSearchPage }) => ({ default: HospitalSearchPage })));
+const LabSearchPage = React.lazy(() => import('./pages/LabSearchPage').then(({ LabSearchPage }) => ({ default: LabSearchPage })));
+const MedicineSearchPage = React.lazy(() => import('./pages/MedicineSearchPage').then(({ MedicineSearchPage }) => ({ default: MedicineSearchPage })));
+const HowItWorksPage = React.lazy(() => import('./pages/HowItWorksPage').then(({ HowItWorksPage }) => ({ default: HowItWorksPage })));
+const ForDoctorsPage = React.lazy(() => import('./pages/ForDoctorsPage').then(({ ForDoctorsPage }) => ({ default: ForDoctorsPage })));
+const ForPharmaciesPage = React.lazy(() => import('./pages/ForPharmaciesPage').then(({ ForPharmaciesPage }) => ({ default: ForPharmaciesPage })));
+const AiAssistantPage = React.lazy(() => import('./pages/AiAssistantPage').then(({ AiAssistantPage }) => ({ default: AiAssistantPage })));
+const NewsPage = React.lazy(() => import('./pages/NewsPage').then(({ NewsPage }) => ({ default: NewsPage })));
+const BlogPage = React.lazy(() => import('./pages/BlogPage').then(({ BlogPage }) => ({ default: BlogPage })));
+const BlogPostPage = React.lazy(() => import('./pages/BlogPostPage').then(({ BlogPostPage }) => ({ default: BlogPostPage })));
+const LocationDirectoryPage = React.lazy(() => import('./pages/LocationDirectoryPage').then(({ LocationDirectoryPage }) => ({ default: LocationDirectoryPage })));
+const LocationSpecificPage = React.lazy(() => import('./pages/LocationSpecificPage').then(({ LocationSpecificPage }) => ({ default: LocationSpecificPage })));
+const CareersPage = React.lazy(() => import('./pages/CareersPage').then(({ CareersPage }) => ({ default: CareersPage })));
+const InternshipPage = React.lazy(() => import('./pages/InternshipPage').then(({ InternshipPage }) => ({ default: InternshipPage })));
+const ContactPage = React.lazy(() => import('./pages/ContactPage').then(({ ContactPage }) => ({ default: ContactPage })));
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then(({ LoginPage }) => ({ default: LoginPage })));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(({ RegisterPage }) => ({ default: RegisterPage })));
+const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage').then(({ AdminLoginPage }) => ({ default: AdminLoginPage })));
+const PatientDashboard = React.lazy(() => import('./pages/dashboards/PatientDashboard').then(({ PatientDashboard }) => ({ default: PatientDashboard })));
+const DoctorDashboard = React.lazy(() => import('./pages/dashboards/DoctorDashboard').then(({ DoctorDashboard }) => ({ default: DoctorDashboard })));
+const PharmacyDashboard = React.lazy(() => import('./pages/dashboards/PharmacyDashboard').then(({ PharmacyDashboard }) => ({ default: PharmacyDashboard })));
+const AdminDashboard = React.lazy(() => import('./pages/dashboards/AdminDashboard').then(({ AdminDashboard }) => ({ default: AdminDashboard })));
+const ServerErrorPage = React.lazy(() => import('./pages/errors/ServerErrorPage').then(({ ServerErrorPage }) => ({ default: ServerErrorPage })));
+const UnauthorizedPage = React.lazy(() => import('./pages/errors/UnauthorizedPage').then(({ UnauthorizedPage }) => ({ default: UnauthorizedPage })));
+const NotFoundPage = React.lazy(() => import('./pages/errors/NotFoundPage').then(({ NotFoundPage }) => ({ default: NotFoundPage })));
 import { AnalyticsTracker } from './lib/analytics';
 
 // Scroll to top on route change
@@ -70,6 +69,11 @@ export function App() {
                 <div className="flex flex-col min-h-screen bg-[#F7F8F6] text-[#101515] font-sans selection:bg-[#0E6763] selection:text-white">
                   <Navbar />
                   <main className="flex-grow">
+                    <React.Suspense fallback={
+                      <div role="status" aria-live="polite" className="flex min-h-[40vh] items-center justify-center text-sm font-medium text-slate-600">
+                        Loading page...
+                      </div>
+                    }>
                     <Routes>
                       {/* Public Gateway Pages */}
                       <Route path="/" element={<HomePage />} />
@@ -81,8 +85,12 @@ export function App() {
                       <Route path="/why-meditrust" element={<WhyMediTrustPage />} />
                       <Route path="/team" element={<TeamPage />} />
                       <Route path="/doctors" element={<DoctorSearchPage />} />
+                      <Route path="/hospitals" element={<HospitalSearchPage />} />
+                      <Route path="/hospitals/in/:city" element={<HospitalSearchPage />} />
                       <Route path="/pharmacies" element={<PharmacySearchPage />} />
+                      <Route path="/labs" element={<LabSearchPage />} />
                       <Route path="/medicines" element={<MedicineSearchPage />} />
+                      <Route path="/medicine-encyclopedia" element={<MedicineSearchPage />} />
                       <Route path="/how-it-works" element={<HowItWorksPage />} />
                       <Route path="/for-doctors" element={<ForDoctorsPage />} />
                       <Route path="/for-pharmacies" element={<ForPharmaciesPage />} />
@@ -144,6 +152,7 @@ export function App() {
                       <Route path="/500" element={<ServerErrorPage />} />
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
+                    </React.Suspense>
                   </main>
                   <Footer />
                 </div>

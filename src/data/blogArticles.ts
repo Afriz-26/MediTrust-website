@@ -25,7 +25,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Patient Care Team',
     readTime: '4 min read',
     publishedAt: 'August 1, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/indian_patient_care_1787291192534.jpg',
     tags: ['Doctor Appointments', 'Online Doctor Booking', 'Healthcare Discovery', 'Patient Tips', 'MediTrust'],
     keyTakeaways: [
       'Search doctors by specialty, distance, and verified patient reviews.',
@@ -52,7 +52,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Founder & CEO, Medynex Solutions LLP',
     readTime: '6 min read',
     publishedAt: 'July 28, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/indian_consultation_1787291140026.jpg',
     tags: ['Healthcare AI', 'AI Medical Assistant', 'Symptom Checker', 'HealthTech Innovations', 'Medynex AI'],
     keyTakeaways: [
       'AI acts as a preliminary symptom triage tool, encouraging timely medical consultations.',
@@ -79,7 +79,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Co-Founder & Head of Operations',
     readTime: '5 min read',
     publishedAt: 'July 20, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/pharmacy_dispensary_1790873041570.jpg',
     tags: ['Digital Prescription', 'ABDM Compliance', 'EHR', 'Pharmacy Tech', 'MediTrust'],
     keyTakeaways: [
       'Digital prescriptions eliminate illegible handwriting errors and missing dosage instructions.',
@@ -106,7 +106,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Chief Medical Officer, MediTrust',
     readTime: '5 min read',
     publishedAt: 'July 15, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/indian_doctors_team_1787291153150.jpg',
     tags: ['Find Doctors', 'Cardiologist', 'Neurologist', 'Pediatrician', 'Healthcare Tips'],
     keyTakeaways: [
       'Start with a Primary Care Physician for broad diagnostic evaluations.',
@@ -131,7 +131,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Diagnostic Research Team',
     readTime: '4 min read',
     publishedAt: 'July 10, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/hero_medical_center_1790873027526.jpg',
     tags: ['Preventive Healthcare', 'Blood Test', 'Pathology Lab', 'Health Checkup', 'MediTrust Diagnostics'],
     keyTakeaways: [
       'Preventive checkups identify metabolic abnormalities long before symptoms appear.',
@@ -156,7 +156,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
     authorRole: 'Platform Architecture',
     readTime: '4 min read',
     publishedAt: 'June 30, 2026',
-    imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/src/assets/images/news_abdm_health_1790873696454.jpg',
     tags: ['Medynex Technology', 'MediTrust Update', 'HealthTech', 'Digital Queue Tokens', 'ABDM'],
     keyTakeaways: [
       'Sub-second token queue updates for OPD consultation desks.',
