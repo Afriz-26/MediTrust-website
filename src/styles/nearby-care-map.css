@@ -1,0 +1,479 @@
+/* Nearby pharmacies & hospitals locator (OpenStreetMap) */
+
+.mt-map {
+  --mt-surface: #ffffff;
+  --mt-surface-muted: #f8fafc;
+  --mt-border: #e2e8f0;
+  --mt-text: #0f172a;
+  --mt-text-muted: #64748b;
+  --mt-accent: var(--color-accent-primary, #2563eb);
+  --mt-accent-ink: #ffffff;
+  --mt-pharmacy: #2563eb;
+  --mt-hospital: #dc2626;
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--mt-border);
+  border-radius: 24px;
+  background: var(--mt-surface);
+  color: var(--mt-text);
+}
+
+.mt-map--dark {
+  --mt-surface: #111827;
+  --mt-surface-muted: #0b1120;
+  --mt-border: #1f2937;
+  --mt-text: #f8fafc;
+  --mt-text-muted: #94a3b8;
+  --mt-accent: #22d3ee;
+  --mt-accent-ink: #062a30;
+  --mt-pharmacy: #22d3ee;
+  --mt-hospital: #fb7185;
+}
+
+.mt-map-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mt-map-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--mt-text);
+}
+
+.mt-map-title-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--mt-accent);
+  flex-shrink: 0;
+}
+
+.mt-map-subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--mt-text-muted);
+}
+
+.mt-map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mt-map-geo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.mt-map-geo:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.mt-map-geo:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.mt-map-geo svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mt-map-radius {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mt-text-muted);
+}
+
+.mt-map-radius select {
+  padding: 8px 10px;
+  border: 1px solid var(--mt-border);
+  border-radius: 10px;
+  background: var(--mt-surface-muted);
+  color: var(--mt-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mt-map-search {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.mt-map-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--mt-text-muted);
+  pointer-events: none;
+}
+
+.mt-map-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px 12px 42px;
+  border: 1px solid var(--mt-border);
+  border-radius: 12px;
+  background: var(--mt-surface-muted);
+  color: var(--mt-text);
+  font-size: 13px;
+}
+
+.mt-map-search input::placeholder {
+  color: var(--mt-text-muted);
+}
+
+.mt-map-search input:focus-visible {
+  outline: 2px solid var(--mt-accent);
+  outline-offset: 1px;
+}
+
+.mt-map-search button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 12px;
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mt-map-search button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mt-map-search button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mt-map-tabs {
+  display: inline-flex;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--mt-surface-muted);
+}
+
+.mt-map-tabs button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--mt-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mt-map-tabs button.is-active {
+  background: var(--mt-surface);
+  color: var(--mt-text);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.14);
+}
+
+.mt-map-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  border-radius: 14px;
+  background: rgba(220, 38, 38, 0.07);
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mt-map--dark .mt-map-alert {
+  color: #fca5a5;
+}
+
+.mt-map-alert svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.mt-map-status {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mt-text-muted);
+}
+
+.mt-map-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.mt-map-canvas-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mt-border);
+  border-radius: 16px;
+  background: var(--mt-surface-muted);
+}
+
+.mt-map-canvas {
+  width: 100%;
+  height: 420px;
+  z-index: 0;
+}
+
+.mt-map-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(248, 250, 252, 0.72);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mt-map-overlay svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mt-map-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  max-height: 420px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mt-map-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--mt-surface-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mt-map-result:hover,
+.mt-map-result.is-active {
+  border-color: var(--mt-accent);
+}
+
+.mt-map-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mt-map-dot--pharmacy {
+  background: var(--mt-pharmacy);
+}
+
+.mt-map-dot--hospital {
+  background: var(--mt-hospital);
+}
+
+.mt-map-result-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mt-map-result-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mt-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-map-result-meta {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--mt-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mt-map-result-link {
+  display: inline-flex;
+  color: var(--mt-text-muted);
+  flex-shrink: 0;
+}
+
+.mt-map-result-link:hover {
+  color: var(--mt-accent);
+}
+
+.mt-map-result-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.mt-map-empty {
+  padding: 16px 14px;
+  border-radius: 12px;
+  background: var(--mt-surface-muted);
+  color: var(--mt-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mt-map-credit {
+  margin: 0;
+  font-size: 11px;
+  color: var(--mt-text-muted);
+}
+
+.mt-map-credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Map markers */
+.mt-map-pin span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: var(--mt-pharmacy);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.4);
+}
+
+.mt-map-pin--hospital span {
+  background: var(--mt-hospital);
+}
+
+.mt-map-you span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  background: var(--mt-accent);
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.18);
+}
+
+/* Popup contents */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+}
+
+.mt-map-popup-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mt-map-popup-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.mt-map-popup-line {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.mt-map-popup-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.mt-map-spin {
+  animation: mt-map-spin 0.9s linear infinite;
+}
+
+@keyframes mt-map-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .mt-map {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .mt-map-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mt-map-canvas {
+    height: 320px;
+  }
+
+  .mt-map-results {
+    max-height: 320px;
+  }
+
+  .mt-map-search button span {
+    display: none;
+  }
+
+  .mt-map-search button {
+    padding: 0 14px;
+  }
+}

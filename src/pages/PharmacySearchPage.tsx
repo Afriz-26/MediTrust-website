@@ -10,6 +10,7 @@ import { SEO } from '../components/common/SEO';
 import { PHARMACY_SEARCH_KEYWORDS } from '../lib/seo';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
 import { getGoogleMapsSearchUrl } from '../lib/googleMaps';
+import { NearbyCareMap } from '../components/locator/NearbyCareMap';
 
 export const PharmacySearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -167,6 +168,9 @@ export const PharmacySearchPage: React.FC = () => {
             Directory information may be outdated and is not an endorsement or verification of pharmacy licensing. Use Google Maps or contact the pharmacy to confirm details.
           </p>
         </div>
+
+        {/* OpenStreetMap locator: pharmacies and hospitals near the visitor */}
+        <NearbyCareMap />
 
         {/* Location Notice Banner if no partnered pharmacy exists */}
         {location.city && filteredPharmacies.filter(p => p.onboardingStatus === 'Active' || p.onboardingStatus === 'Verified').length === 0 && (

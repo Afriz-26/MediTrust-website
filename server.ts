@@ -13,6 +13,7 @@ import { VoiceService } from './server/services/VoiceService';
 import { PlacesService } from './server/services/PlacesService';
 import { MedicineProviderService } from './server/services/MedicineProvider';
 import { HealthcareDiscoveryService } from './server/services/HealthcareDiscoveryService';
+import { OsmService, OsmPlaceType } from './server/services/OsmService';
 import { withRetry } from './server/utils/retry';
 import { cleanBase64Data, sanitizeMimeType } from './server/utils/base64';
 
@@ -115,6 +116,63 @@ async function startServer() {
     } catch (err: any) {
       console.error('[API Nearby Healthcare Error]:', err);
       res.status(500).json({ error: 'Failed to discover nearby healthcare', details: err.message });
+    }
+  });
+
+  // ==========================================
+  // OPENSTREETMAP LOCATOR ENDPOINTS
+  // ==========================================
+
+  // Geocode a typed location (city, area, pincode, landmark)
+  app.get('/api/osm/geocode', async (req, res) => {
+    try {
+      const query = ((req.query.q as string) || '').trim();
+      if (!query) {
+        return res.status(400).json({ error: 'A search query is required' });
+      }
+      const results = await OsmService.geocode(query);
+      res.json({ results, count: results.length });
+    } catch (err: any) {
+      console.error('[API OSM Geocode Error]:', err);
+      res.status(502).json({ error: 'Location search is unavailable right now', details: err.message });
+    }
+  });
+
+  // Reverse geocode coordinates (used for the visitor's current location)
+  app.get('/api/osm/reverse', async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lng = parseFloat(req.query.lng as string);
+      if (isNaN(lat) || isNaN(lng)) {
+        return res.status(400).json({ error: 'Valid lat and lng numeric parameters required' });
+      }
+      const result = await OsmService.reverseGeocode(lat, lng);
+      res.json({ result });
+    } catch (err: any) {
+      console.error('[API OSM Reverse Geocode Error]:', err);
+      res.status(502).json({ error: 'Could not name this location', details: err.message });
+    }
+  });
+
+  // Nearby pharmacies and hospitals from OpenStreetMap
+  app.get('/api/osm/nearby', async (req, res) => {
+    try {
+      const lat = parseFloat(req.query.lat as string);
+      const lng = parseFloat(req.query.lng as string);
+      if (isNaN(lat) || isNaN(lng)) {
+        return res.status(400).json({ error: 'Valid lat and lng numeric parameters required' });
+      }
+      const radiusMeters = Math.min(Math.max(parseInt(req.query.radius as string) || 5000, 500), 25000);
+      const requestedTypes = ((req.query.types as string) || 'pharmacy,hospital')
+        .split(',')
+        .map((type) => type.trim())
+        .filter((type): type is OsmPlaceType => type === 'pharmacy' || type === 'hospital');
+
+      const places = await OsmService.nearby(lat, lng, radiusMeters, requestedTypes);
+      res.json({ places, count: places.length });
+    } catch (err: any) {
+      console.error('[API OSM Nearby Error]:', err);
+      res.status(502).json({ error: 'Nearby pharmacies and hospitals are unavailable right now', details: err.message });
     }
   });
 
