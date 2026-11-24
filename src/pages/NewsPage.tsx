@@ -189,7 +189,7 @@ export const NewsPage: React.FC = () => {
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF5F1] border border-[#DCEFEA] text-[#0E6763] text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-mint-subtle border border-mint-subtle text-teal-brand text-xs font-semibold">
             <Newspaper className="w-3.5 h-3.5" />
             <span>Medynex Newsroom & Press Journal</span>
           </div>
@@ -207,7 +207,7 @@ export const NewsPage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="rounded-3xl bg-white border border-[#E7EAE7] overflow-hidden shadow-sm hover:border-[#0E6763]/50 transition-all grid grid-cols-1 lg:grid-cols-12 group"
+            className="rounded-3xl bg-white border border-[#E7EAE7] overflow-hidden shadow-sm hover:border-teal-brand-soft transition-all grid grid-cols-1 lg:grid-cols-12 group"
           >
             {/* Visual Image */}
             <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden bg-slate-900">
@@ -233,14 +233,14 @@ export const NewsPage: React.FC = () => {
               <div className="space-y-4">
                 {/* Clean Typographic Metadata */}
                 <div className="flex items-center gap-2 text-xs text-[#737A78]">
-                  <span className="font-semibold text-[#0E6763]">{featuredArticle.category}</span>
+                  <span className="font-semibold text-teal-brand">{featuredArticle.category}</span>
                   <span aria-hidden="true">·</span>
                   <span>{featuredArticle.publishedAt}</span>
                   <span aria-hidden="true">·</span>
                   <span>{featuredArticle.readTime}</span>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#101515] tracking-tight leading-tight group-hover:text-[#0E6763] transition-colors">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#101515] tracking-tight leading-tight group-hover:text-teal-brand transition-colors">
                   {featuredArticle.title}
                 </h2>
 
@@ -266,7 +266,7 @@ export const NewsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveArticle(featuredArticle)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#101515] hover:bg-[#0E6763] text-white font-bold text-xs transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#101515] hover:bg-teal-brand text-white font-bold text-xs transition-colors shadow-sm"
                 >
                   <span>Read Article</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -305,7 +305,7 @@ export const NewsPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search news & press..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E7EAE7] text-xs text-[#101515] placeholder:text-[#737A78] focus:outline-none focus:border-[#0E6763] transition-colors shadow-2xs"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E7EAE7] text-xs text-[#101515] placeholder:text-[#737A78] focus:outline-none focus:border-teal-brand transition-colors shadow-2xs"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737A78]">
@@ -323,7 +323,7 @@ export const NewsPage: React.FC = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="rounded-3xl bg-white border border-[#E7EAE7] overflow-hidden shadow-xs hover:shadow-md hover:border-[#0E6763]/50 transition-all flex flex-col justify-between group"
+              className="rounded-3xl bg-white border border-[#E7EAE7] overflow-hidden shadow-xs hover:shadow-md hover:border-teal-brand-soft transition-all flex flex-col justify-between group"
             >
               <div>
                 <div className="aspect-[16/10] overflow-hidden bg-slate-900 relative">
@@ -352,7 +352,7 @@ export const NewsPage: React.FC = () => {
                     <span>{article.readTime}</span>
                   </div>
 
-                  <h3 className="text-lg font-bold text-[#101515] leading-snug group-hover:text-[#0E6763] transition-colors">
+                  <h3 className="text-lg font-bold text-[#101515] leading-snug group-hover:text-teal-brand transition-colors">
                     {article.title}
                   </h3>
 
@@ -368,7 +368,7 @@ export const NewsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveArticle(article)}
-                  className="text-[#0E6763] font-bold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                  className="text-teal-brand font-bold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
                 >
                   <span>Read Article</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ export const NewsPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
             <a
               href="mailto:medynexsolutions26@gmail.com"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#0E6763] hover:bg-[#2B9A91] text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-teal-brand hover:bg-teal-fresh text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Mail className="w-4 h-4" />
               <span>Contact Press Desk</span>
@@ -425,7 +425,7 @@ export const NewsPage: React.FC = () => {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-[#737A78]">
-                  <span className="font-semibold text-[#0E6763]">{activeArticle.category}</span>
+                  <span className="font-semibold text-teal-brand">{activeArticle.category}</span>
                   <span aria-hidden="true">·</span>
                   <span>{activeArticle.publishedAt}</span>
                   <span aria-hidden="true">·</span>
@@ -470,7 +470,7 @@ export const NewsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveArticle(null)}
-                  className="px-6 py-2.5 rounded-xl bg-[#101515] hover:bg-[#0E6763] text-white font-bold text-xs transition-colors"
+                  className="px-6 py-2.5 rounded-xl bg-[#101515] hover:bg-teal-brand text-white font-bold text-xs transition-colors"
                 >
                   Close Article
                 </button>

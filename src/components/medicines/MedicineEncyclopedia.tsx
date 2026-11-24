@@ -63,7 +63,7 @@ export interface StructuredMedicineData {
   storageAndHandling: string;
   dataSource: {
     name: string;
-    type: 'openFDA' | 'CDSCO/DPCO' | 'Clinical Monograph';
+    type: 'openFDA' | 'CDSCO/DPCO' | 'Clinical Monograph' | 'Reference catalog';
     officialUrl?: string;
     lastVerified: string;
   };
@@ -201,10 +201,11 @@ export const MedicineEncyclopedia: React.FC<MedicineEncyclopediaProps> = ({
           },
           storageAndHandling: catMatch.storageAdvice,
           dataSource: {
-            name: `${catMatch.priceSource} (Verified Indian Registry)`,
-            type: 'CDSCO/DPCO',
-            officialUrl: 'https://nppa.gov.in',
-            lastVerified: 'October 2026'
+            // The catalog price is a reference value; it has not been checked
+            // against an NPPA/DPCO or manufacturer price list.
+            name: 'MediTrust reference catalog — prices not officially verified',
+            type: 'Reference catalog',
+            lastVerified: 'not applicable (reference prices)'
           }
         };
 
@@ -565,7 +566,7 @@ Source: ${medicineData.dataSource.name}`;
                   <span>{medicineData.schedule}</span>
                 </span>
                 <span className="text-xs text-slate-400 font-mono hidden sm:inline">
-                  Verified: {medicineData.dataSource.lastVerified}
+                  Source checked: {medicineData.dataSource.lastVerified}
                 </span>
               </div>
 

@@ -335,7 +335,7 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-2 max-h-[85vh] overflow-y-auto shadow-xl">
+          <div className="2xl:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-2 max-h-[85vh] overflow-y-auto shadow-xl">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => { setIsThemeModalOpen(true); setMobileMenuOpen(false); }}

@@ -92,7 +92,7 @@ export const PlatformShowcaseSection: React.FC = () => {
           </div>
 
           {/* Column 2: The MediTrust Solution */}
-          <div className="rounded-3xl bg-[#0E6763] text-white p-8 sm:p-10 space-y-6 flex flex-col justify-between shadow-xl shadow-teal-950/20 relative overflow-hidden">
+          <div className="rounded-3xl bg-teal-brand text-white p-8 sm:p-10 space-y-6 flex flex-col justify-between shadow-xl shadow-teal-950/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="space-y-4 relative z-10">
@@ -163,7 +163,7 @@ export const PlatformShowcaseSection: React.FC = () => {
             <button
               onClick={() => setIsNominateModalOpen(true)}
               id="btn-platform-showcase-nominate"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#0E6763] hover:bg-[#2B9A91] text-white font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-teal-brand hover:bg-teal-fresh text-white font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 group"
             >
               <Building2 className="w-4 h-4" />
               <span>Nominate a Provider</span>

@@ -118,7 +118,7 @@ export const HowItWorksPage: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF5F1] border border-[#DCEFEA] text-[#0E6763] text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-mint-subtle border border-mint-subtle text-teal-brand text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Intelligent Ecosystem Workflows</span>
           </div>
@@ -182,8 +182,8 @@ export const HowItWorksPage: React.FC = () => {
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-black text-[#DCEFEA]">{step.step}</span>
-                      <div className="w-10 h-10 rounded-xl bg-[#EAF5F1] text-[#0E6763] flex items-center justify-center border border-[#DCEFEA]">
+                      <span className="text-2xl font-black text-mint-subtle">{step.step}</span>
+                      <div className="w-10 h-10 rounded-xl bg-mint-subtle text-teal-brand flex items-center justify-center border border-mint-subtle">
                         <IconComp className="w-5 h-5" />
                       </div>
                     </div>
@@ -193,7 +193,7 @@ export const HowItWorksPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-[#E7EAE7]/60 flex items-center gap-1 text-xs font-semibold text-[#0E6763]">
+                  <div className="pt-4 mt-4 border-t border-[#E7EAE7]/60 flex items-center gap-1 text-xs font-semibold text-teal-brand">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Verified Step</span>
                   </div>
@@ -214,7 +214,7 @@ export const HowItWorksPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/register"
-              className="px-6 py-3 rounded-xl bg-[#0E6763] hover:bg-[#2B9A91] text-white text-sm font-bold transition-all shadow-lg flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-teal-brand hover:bg-teal-fresh text-white text-sm font-bold transition-all shadow-lg flex items-center gap-2"
             >
               <span>Get Started Now</span>
               <ArrowRight className="w-4 h-4" />

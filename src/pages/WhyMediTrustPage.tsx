@@ -10,6 +10,7 @@ export const WhyMediTrustPage: React.FC = () => {
         description="Learn why doctors, hospitals, and patients choose MediTrust for real-time queue tokens, QR prescriptions, and ABDM health interoperability."
         canonicalUrl="https://medynex.com/why-meditrust"
       />
+      <h1 className="sr-only">Why choose MediTrust by Medynex Solutions</h1>
       <WhyChooseSection />
     </div>
   );

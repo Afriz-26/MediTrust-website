@@ -65,14 +65,14 @@ export const ForDoctorsPage: React.FC = () => {
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF5F1] border border-[#DCEFEA] text-[#0E6763] text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-mint-subtle border border-mint-subtle text-teal-brand text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Physician & Specialist Network</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#101515] tracking-tight leading-[1.1]">
               Build your digital presence. <br />
-              <span className="text-[#0E6763]">Reach the patients</span> looking for you.
+              <span className="text-teal-brand">Reach the patients</span> looking for you.
             </h1>
 
             <p className="text-base sm:text-lg text-[#737A78] max-w-xl leading-relaxed">
@@ -82,7 +82,7 @@ export const ForDoctorsPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link
                 to="/register?role=doctor"
-                className="px-7 py-3.5 rounded-2xl bg-[#101515] hover:bg-[#0E6763] text-white font-bold text-sm transition-all shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
+                className="px-7 py-3.5 rounded-2xl bg-[#101515] hover:bg-teal-brand text-white font-bold text-sm transition-all shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <Stethoscope className="w-4 h-4" />
                 <span>Join as a Doctor</span>
@@ -90,7 +90,7 @@ export const ForDoctorsPage: React.FC = () => {
               </Link>
               <Link
                 to="/how-it-works"
-                className="px-6 py-3.5 rounded-2xl bg-white text-[#101515] border border-[#E7EAE7] hover:border-[#0E6763] font-semibold text-sm transition-all"
+                className="px-6 py-3.5 rounded-2xl bg-white text-[#101515] border border-[#E7EAE7] hover:border-teal-brand font-semibold text-sm transition-all"
               >
                 <span>Learn How It Works</span>
               </Link>
@@ -115,7 +115,7 @@ export const ForDoctorsPage: React.FC = () => {
           <div className="lg:col-span-5">
             <div className="card-editorial p-8 bg-white border border-[#E7EAE7] shadow-xl space-y-6 relative overflow-hidden">
               <div className="space-y-2">
-                <span className="text-xs font-bold text-[#0E6763] uppercase tracking-wider">Fast Onboarding</span>
+                <span className="text-xs font-bold text-teal-brand uppercase tracking-wider">Fast Onboarding</span>
                 <h3 className="text-2xl font-bold text-[#101515]">Doctor Verification Roadmap</h3>
                 <p className="text-xs text-[#737A78]">Our 4-step credential verification ensures trust across the entire ecosystem.</p>
               </div>
@@ -141,7 +141,7 @@ export const ForDoctorsPage: React.FC = () => {
 
               <Link
                 to="/register?role=doctor"
-                className="w-full py-3 rounded-xl bg-[#0E6763] hover:bg-[#2B9A91] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-teal-brand hover:bg-teal-fresh text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <span>Start Doctor Application</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -164,7 +164,7 @@ export const ForDoctorsPage: React.FC = () => {
               const Icon = b.icon;
               return (
                 <div key={idx} className="card-editorial p-7 bg-white space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#EAF5F1] text-[#0E6763] flex items-center justify-center border border-[#DCEFEA]">
+                  <div className="w-12 h-12 rounded-2xl bg-mint-subtle text-teal-brand flex items-center justify-center border border-mint-subtle">
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold text-[#101515]">{b.title}</h3>
@@ -187,7 +187,7 @@ export const ForDoctorsPage: React.FC = () => {
           </div>
           <Link
             to="/register?role=doctor"
-            className="px-8 py-4 rounded-2xl bg-[#0E6763] hover:bg-[#2B9A91] text-white font-bold text-sm transition-all shadow-xl shrink-0 flex items-center gap-2"
+            className="px-8 py-4 rounded-2xl bg-teal-brand hover:bg-teal-fresh text-white font-bold text-sm transition-all shadow-xl shrink-0 flex items-center gap-2"
           >
             <Stethoscope className="w-4 h-4" />
             <span>Register as a Doctor</span>

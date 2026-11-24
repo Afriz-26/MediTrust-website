@@ -441,6 +441,15 @@ export interface PharmaceuticalMedicine {
   currency: string;
   priceLive: boolean;
   priceSource: string;
+  /**
+   * Set only when the price has been checked against an authoritative source.
+   * Without it the UI shows the amount as an unverified catalog reference.
+   */
+  priceVerification?: {
+    state: 'verified' | 'reference';
+    source?: string;
+    verifiedAt?: string;
+  };
   packSize: string;
   description: string;
   indications: string[];

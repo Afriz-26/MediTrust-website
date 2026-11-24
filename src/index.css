@@ -19,6 +19,20 @@
   --color-teal-fresh: #2B9A91;
   --color-mint-soft: #DCEFEA;
   --color-green-subtle: #EAF5F1;
+
+  /* Theme accent tokens — overwritten at runtime by ThemeContext.
+     Defaults match the original MediTrust teal so the untouched look is unchanged. */
+  --accent-primary: #0E6763;
+  --accent-strong: #2B9A91;
+  --accent-soft: #EAF5F1;
+  --accent-tint: #DCEFEA;
+  --accent-border: rgba(14, 103, 99, 0.5);
+  --accent-glow: rgba(14, 103, 99, 0.3);
+
+  /* Homepage hero accent roles — defaults are the hero's own blue/sage palette. */
+  --accent-hero-primary: #247BA0;
+  --accent-hero-strong: #1C6584;
+  --accent-hero-soft: #4A9B8A;
 }
 
 /* Custom Design System Utilities */
@@ -43,19 +57,103 @@
 }
 
 .bg-teal-brand {
-  background-color: #0E6763;
+  background-color: var(--accent-primary);
 }
 
 .text-teal-brand {
-  color: #0E6763;
+  color: var(--accent-primary);
+}
+
+.border-teal-brand {
+  border-color: var(--accent-primary);
+}
+
+.border-teal-brand-soft {
+  border-color: var(--accent-border);
+}
+
+.bg-teal-fresh {
+  background-color: var(--accent-strong);
+}
+
+.text-teal-fresh {
+  color: var(--accent-strong);
+}
+
+.border-teal-fresh-soft {
+  border-color: var(--accent-border);
+}
+
+.bg-teal-glow {
+  background-color: var(--accent-glow);
 }
 
 .bg-mint-subtle {
-  background-color: #EAF5F1;
+  background-color: var(--accent-soft);
+}
+
+.text-mint-subtle {
+  color: var(--accent-tint);
 }
 
 .border-mint-subtle {
-  border-color: #DCEFEA;
+  border-color: var(--accent-tint);
+}
+
+/* State variants for the accent utilities above.
+   Plain CSS classes do not pick up Tailwind's hover:/selection: prefixes,
+   so these escaped selectors keep the accent reactive in those states. */
+.hover\:bg-teal-brand:hover {
+  background-color: var(--accent-primary);
+}
+
+.hover\:bg-teal-fresh:hover {
+  background-color: var(--accent-strong);
+}
+
+.hover\:text-teal-brand:hover {
+  color: var(--accent-primary);
+}
+
+.hover\:border-teal-brand:hover {
+  border-color: var(--accent-primary);
+}
+
+.hover\:border-teal-brand-soft:hover {
+  border-color: var(--accent-border);
+}
+
+.hover\:border-teal-fresh-soft:hover {
+  border-color: var(--accent-border);
+}
+
+.selection\:bg-teal-brand::selection {
+  background-color: var(--accent-primary);
+}
+
+/* Homepage hero accent utilities */
+.text-hero-primary {
+  color: var(--accent-hero-primary);
+}
+
+.bg-hero-primary {
+  background-color: var(--accent-hero-primary);
+}
+
+.text-hero-accent {
+  color: var(--accent-hero-soft);
+}
+
+.bg-hero-accent {
+  background-color: var(--accent-hero-soft);
+}
+
+.hover\:bg-hero-strong:hover {
+  background-color: var(--accent-hero-strong);
+}
+
+.focus-visible\:outline-hero-primary:focus-visible {
+  outline-color: var(--accent-hero-primary);
 }
 
 /* Elevated Editorial Cards & Shadows */
@@ -70,7 +168,7 @@
 .card-editorial-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 20px 40px -8px rgba(16, 21, 21, 0.08), 0 30px 70px -12px rgba(14, 103, 99, 0.08);
-  border-color: #DCEFEA;
+  border-color: var(--accent-tint);
 }
 
 /* Soft Pill Tags and Badges */

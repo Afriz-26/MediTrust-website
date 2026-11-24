@@ -195,7 +195,7 @@ export const StatsSection: React.FC = () => {
             <button
               type="submit"
               id="btn-universal-search-submit"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#0E6763] hover:bg-[#167873] text-white font-bold text-sm transition-all shadow-md shadow-teal-900/10 flex items-center justify-center gap-2 shrink-0 group"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-teal-brand hover:bg-teal-fresh text-white font-bold text-sm transition-all shadow-md shadow-teal-900/10 flex items-center justify-center gap-2 shrink-0 group"
             >
               <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span>Search Providers</span>

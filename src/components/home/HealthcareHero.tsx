@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { SearchAutocomplete, SuggestionItem } from '../common/SearchAutocomplete';
 import { useLocation } from '../../context/LocationContext';
-import heroImage from '../../assets/images/hero_bright_healthcare_1790915208361.jpg';
+import '../../styles/home-editorial.css';
 
 type SearchType = 'all' | 'doctor' | 'hospital' | 'pharmacy' | 'medicine';
 
@@ -23,6 +23,9 @@ const searchTabs: { id: SearchType; label: string; icon: React.ReactNode }[] = [
   { id: 'pharmacy', label: 'Pharmacies', icon: <Store className="h-4 w-4" /> },
   { id: 'medicine', label: 'Medicines', icon: <Pill className="h-4 w-4" /> }
 ];
+
+const heroImage =
+  'https://media.base44.com/images/public/6b030cdbdc778ab3ef0d040a/0b050a4f2fe5fa67a4a7158366b1a985_generated_e5f7fd03.jpg';
 
 export const HealthcareHero: React.FC = () => {
   const navigate = useNavigate();
@@ -73,113 +76,119 @@ export const HealthcareHero: React.FC = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#f4f8f4]">
+    <section className="relative overflow-hidden bg-[#FAFAF7]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-48 -top-48 h-[34rem] w-[34rem] rounded-full bg-[#dcece1] blur-3xl opacity-70" />
-        <div className="absolute -right-40 top-24 h-[30rem] w-[30rem] rounded-full bg-[#e4efeb] blur-3xl opacity-70" />
+        <div className="absolute -left-40 -top-36 h-[460px] w-[460px] rounded-full bg-[#dcebe6] opacity-70 blur-[70px]" />
+        <div className="absolute -right-36 top-28 h-[420px] w-[420px] rounded-full bg-[#dbe8f0] opacity-70 blur-[70px]" />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 pt-12 sm:px-8 sm:pt-16 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12 lg:px-10 lg:pb-20 lg:pt-16">
-        <div className="relative z-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#c9ddd0] bg-white/80 px-3.5 py-2 text-sm font-semibold text-[#315b46] shadow-sm">
-            <ShieldCheck className="h-4 w-4 text-[#27714d]" />
-            Care that feels a little more connected
-          </div>
-
-          <h1 className="max-w-2xl text-[2.65rem] font-semibold leading-[1.08] tracking-[-0.045em] text-[#172c23] sm:text-6xl lg:text-[4.25rem]">
-            Find the care you need,{' '}
-            <span className="font-serif font-medium italic text-[#27714d]">without the runaround.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-7 text-[#52665a] sm:text-lg">
-            Find doctors and hospitals, explore nearby pharmacies, and look up medicine information. Open local listings in Google Maps.
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 max-w-2xl rounded-[1.4rem] border border-[#dce5de] bg-white p-2 shadow-[0_18px_60px_-30px_rgba(30,70,48,0.35)]">
-            <div className="flex gap-1 overflow-x-auto px-1 pt-1" role="tablist" aria-label="Search category">
-              {searchTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={searchType === tab.id}
-                  onClick={() => setSearchType(tab.id)}
-                  className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27714d] ${
-                    searchType === tab.id
-                      ? 'bg-[#eaf3ec] text-[#245d3d]'
-                      : 'text-[#627267] hover:bg-[#f5f8f5] hover:text-[#294b37]'
-                  }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              ))}
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-[72px]">
+        <div className="grid grid-cols-1 items-center gap-12 py-14 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:py-[72px]">
+          <div className="min-w-0">
+            <div className="rise-1 mb-6 inline-flex items-center gap-2 rounded-full border border-[#cfe0dc] bg-white px-4 py-2 text-sm font-semibold leading-tight text-hero-primary">
+              <ShieldCheck className="h-4 w-4" />
+              Care that feels a little more connected
             </div>
 
-            <div className="mt-2 flex flex-col gap-2 border-t border-[#edf1ed] p-1 pt-3 sm:flex-row">
-              <div className="min-w-0 flex-1">
-                <SearchAutocomplete
-                  value={query}
-                  onChange={setQuery}
-                  filterType={searchType}
-                  onSelect={handleSelect}
-                  placeholder={
-                    searchType === 'medicine'
-                      ? 'Medicine name or generic (e.g. Dolo 650)'
-                      : searchType === 'hospital'
-                        ? 'Hospital, city, or department'
-                        : searchType === 'pharmacy'
-                          ? 'Pharmacy or chemist name'
-                          : 'Doctor, specialty, medicine, or service'
-                  }
-                  className="w-full"
-                />
+            <h1 className="rise-2 m-0 text-[2.5rem] font-bold leading-[1.06] tracking-[-1.8px] text-[#102A43] sm:text-5xl lg:text-[64px]">
+              Find the care you need,{' '}
+              <em className="block not-italic text-hero-accent">without the runaround.</em>
+            </h1>
+            <p className="rise-3 mt-6 max-w-[520px] text-base leading-[1.65] text-[#486581] sm:text-lg">
+              Find doctors and hospitals, explore nearby pharmacies, and look up medicine information. Open local listings in Google Maps.
+            </p>
+
+            <form
+              onSubmit={handleSubmit}
+              className="rise-4 mt-8 max-w-[560px] rounded-[20px] border border-[#e1e8ec] bg-white p-2.5 shadow-[0_24px_50px_-30px_rgba(16,42,67,0.35)]"
+            >
+              <div className="flex gap-1 overflow-x-auto px-0.5 pt-0.5" role="tablist" aria-label="Search category">
+                {searchTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={searchType === tab.id}
+                    onClick={() => setSearchType(tab.id)}
+                    className={`inline-flex shrink-0 items-center gap-[7px] rounded-xl px-3 py-[9px] text-sm font-semibold leading-tight transition-colors duration-200 active:bg-[#e5eef0] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-hero-primary ${
+                      searchType === tab.id
+                        ? 'bg-[#e6f1f2] text-[#1d6a8a]'
+                        : 'bg-transparent text-[#52667a] hover:bg-[#f1f5f6] hover:text-[#102A43]'
+                    }`}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                  </button>
+                ))}
               </div>
-              <button
-                type="submit"
-                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#27714d] px-6 text-sm font-bold text-white transition-colors hover:bg-[#1e5b3c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27714d] focus-visible:ring-offset-2"
-              >
-                Search care <ArrowRight className="h-4 w-4" />
-              </button>
+
+              <div className="mt-2 flex flex-col gap-2 border-t border-[#eef2f3] pt-2.5 sm:flex-row">
+                <div className="min-w-0 flex-1">
+                  <SearchAutocomplete
+                    value={query}
+                    onChange={setQuery}
+                    filterType={searchType}
+                    onSelect={handleSelect}
+                    placeholder={
+                      searchType === 'medicine'
+                        ? 'Medicine name or generic (e.g. Dolo 650)'
+                        : searchType === 'hospital'
+                          ? 'Hospital, city, or department'
+                          : searchType === 'pharmacy'
+                            ? 'Pharmacy or chemist name'
+                            : 'Doctor, specialty, medicine, or service'
+                    }
+                    className="[&_input]:h-12 [&_input]:rounded-xl [&_input]:border-[#dfe7ea] [&_input]:bg-[#fafcfc] [&_input]:py-0 [&_input]:text-sm [&_input]:shadow-none [&_input]:placeholder:text-[#7b8b98] [&_input]:focus:border-[#247BA0] [&_input]:focus:ring-2 [&_input]:focus:ring-[#247BA0]/15"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-hero-primary px-5 text-sm font-bold text-white transition-[background,box-shadow] duration-200 hover:bg-hero-strong hover:shadow-[0_10px_22px_-12px_rgba(36,123,160,0.7)] active:bg-[#175370] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102A43]"
+                >
+                  Search care
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[3px]" />
+                </button>
+              </div>
+
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#eef2f3] px-1.5 pt-2.5">
+                <span className="text-xs text-[#7b8b98]">Try “cardiologist” or “Paracetamol”</span>
+                <button
+                  type="button"
+                  onClick={() => setIsLocationModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] p-2 text-sm font-semibold leading-none text-[#2f5f78] transition-colors duration-200 hover:bg-[#eef5f6] active:bg-[#e1edef] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-hero-primary"
+                >
+                  <MapPin className="h-4 w-4" />
+                  {location.city || 'Choose location'}
+                </button>
+              </div>
+            </form>
+
+            <div className="rise-4 mt-6 flex flex-wrap gap-x-[22px] gap-y-3 text-sm text-[#52667a]">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-hero-accent" />
+                Clear, useful healthcare information
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-hero-accent" />
+                Search by location
+              </span>
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#edf1ed] px-2 pt-3">
-              <span className="text-xs text-[#718075]">Try “cardiologist” or “Paracetamol”</span>
-              <button
-                type="button"
-                onClick={() => setIsLocationModalOpen(true)}
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-[#35624a] transition-colors hover:bg-[#f2f7f3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27714d]"
-              >
-                <MapPin className="h-4 w-4" />
-                {location.city || 'Choose location'}
-              </button>
+          <div className="rise-3 relative">
+            <div aria-hidden="true" className="absolute -inset-x-3 -top-3 bottom-3 rotate-2 rounded-[28px] bg-[#dcebe6]" />
+            <div className="relative overflow-hidden rounded-3xl border border-white bg-[#e6ece9] shadow-[0_30px_70px_-36px_rgba(16,42,67,0.55)]">
+              <img
+                src={heroImage}
+                alt="A healthcare team standing together in a bright clinic"
+                className="block aspect-[4/5] w-full object-cover"
+                fetchPriority="high"
+              />
             </div>
-          </form>
-
-          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#637368]">
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-[#31835a]" />
-              Clear, useful healthcare information
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#31835a]" />
-              Search by location
-            </span>
+            <p className="relative mt-5 text-sm leading-[1.6] text-[#627d98]">
+              A welcoming place to begin your search for care.
+            </p>
           </div>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-[40rem] lg:ml-auto">
-          <div className="absolute -inset-3 rotate-2 rounded-[2rem] bg-[#dce9dd]" />
-          <div className="relative overflow-hidden rounded-[1.7rem] border border-white/80 bg-[#e7ede7] shadow-[0_24px_80px_-35px_rgba(22,56,36,0.5)]">
-            <img
-              src={heroImage}
-              alt="A doctor speaking with a patient in a bright, welcoming clinic"
-              className="aspect-[4/3] w-full object-cover object-center"
-              fetchPriority="high"
-            />
-          </div>
-          <p className="mt-4 text-sm leading-6 text-[#65766a]">
-            A welcoming place to begin your search for care.
-          </p>
         </div>
       </div>
     </section>
