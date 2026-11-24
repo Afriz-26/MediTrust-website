@@ -58,15 +58,15 @@ const ScrollToTop = () => {
 
 export function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
         <LanguageProvider>
           <LocationProvider>
             <HealthcareProvider>
               <Router>
+                <ThemeProvider>
                 <ScrollToTop />
                 <AnalyticsTracker />
-                <div className="flex flex-col min-h-screen bg-[#F7F8F6] text-[#101515] font-sans selection:bg-[#0E6763] selection:text-white">
+                <div className="flex flex-col min-h-screen bg-[#F7F8F6] text-[#101515] font-sans selection:bg-teal-brand selection:text-white">
                   <Navbar />
                   <main className="flex-grow">
                     <React.Suspense fallback={
@@ -156,12 +156,12 @@ export function App() {
                   </main>
                   <Footer />
                 </div>
+                </ThemeProvider>
               </Router>
             </HealthcareProvider>
           </LocationProvider>
         </LanguageProvider>
       </AuthProvider>
-    </ThemeProvider>
   );
 }
 

@@ -43,7 +43,7 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
       <div className="flex flex-col">
         <span className={`${textClasses[size]} font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-[#101515]'} flex items-center gap-1.5 leading-none`}>
-          MediTrust <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EAF5F1] text-[#0E6763] border border-[#DCEFEA]">by Medynex</span>
+          MediTrust <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-mint-subtle text-teal-brand border border-mint-subtle">by Medynex</span>
         </span>
         {showSubtext && (
           <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#737A78]'} font-semibold tracking-wider uppercase mt-0.5`}>

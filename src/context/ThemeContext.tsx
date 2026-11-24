@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  AccentId,
+  ThemeScope,
+  PageAccents,
+  DEFAULT_SITE_ACCENT,
+  isAccentId,
+  resolveAccent,
+  routeKey,
+  sanitizePageAccents,
+  setPageAccent as withPageAccent,
+} from '../lib/themeScope';
+import { SITE_PALETTES, hexToRgba } from '../lib/accentPalettes';
 
-export type AccentId = 'cyan' | 'teal' | 'indigo' | 'emerald' | 'violet' | 'amber' | 'rose';
+export type { AccentId, ThemeScope };
+
+const SITE_ACCENT_KEY = 'meditrust_theme_accent';
+const PAGE_ACCENTS_KEY = 'meditrust_theme_page_accents';
 
 export interface ThemeClasses {
   text: string;
@@ -225,53 +241,126 @@ export const ACCENT_OPTIONS: AccentOption[] = [
 ];
 
 interface ThemeContextType {
+  /** Accent currently in effect for the page being viewed. */
   accent: AccentId;
-  setAccent: (accentId: AccentId) => void;
+  /** Where the effective accent comes from: a page override or the site-wide choice. */
+  accentSource: ThemeScope;
+  /** Site-wide accent, used by pages without an override. */
+  siteAccent: AccentId;
+  /** Accent saved for this page only, or null when the page inherits the site accent. */
+  pageAccent: AccentId | null;
+  /** Scope selected in the theme panel. */
+  scope: ThemeScope;
+  setScope: (scope: ThemeScope) => void;
+  setAccent: (accentId: AccentId, scope?: ThemeScope) => void;
+  clearPageAccent: () => void;
   activeTheme: AccentOption;
   accentOptions: AccentOption[];
   isThemeModalOpen: boolean;
   setIsThemeModalOpen: (open: boolean) => void;
-  resetTheme: () => void;
+  resetTheme: (scope?: ThemeScope) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [accent, setAccentState] = useState<AccentId>(() => {
-    const saved = localStorage.getItem('meditrust_theme_accent') as AccentId;
-    return ACCENT_OPTIONS.some(a => a.id === saved) ? saved : 'cyan';
-  });
+const readPageAccents = (): PageAccents => {
+  try {
+    return sanitizePageAccents(JSON.parse(localStorage.getItem(PAGE_ACCENTS_KEY) || '{}'));
+  } catch {
+    return {};
+  }
+};
 
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { pathname } = useLocation();
+  const currentRoute = routeKey(pathname);
+
+  const [siteAccent, setSiteAccentState] = useState<AccentId>(() => {
+    const saved = localStorage.getItem(SITE_ACCENT_KEY);
+    return isAccentId(saved) ? saved : DEFAULT_SITE_ACCENT;
+  });
+  const [pageAccents, setPageAccentsState] = useState<PageAccents>(readPageAccents);
+  const [scope, setScope] = useState<ThemeScope>('site');
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
+  const { accent, source: accentSource } = resolveAccent(siteAccent, pageAccents, currentRoute);
+  const pageAccent = pageAccents[currentRoute] ?? null;
   const activeTheme = ACCENT_OPTIONS.find(a => a.id === accent) || ACCENT_OPTIONS[0];
+  const palette = SITE_PALETTES[accent];
 
   useEffect(() => {
-    // Apply CSS variables on root document element
+    // Apply the accent tokens on the root element so every themed utility follows.
     const root = document.documentElement;
     root.setAttribute('data-accent', activeTheme.id);
+    root.setAttribute('data-accent-scope', accentSource);
+    root.style.setProperty('--accent-primary', palette.primary);
+    root.style.setProperty('--accent-strong', palette.strong);
+    root.style.setProperty('--accent-soft', palette.soft);
+    root.style.setProperty('--accent-tint', palette.tint);
+    root.style.setProperty('--accent-border', hexToRgba(palette.primary, 0.5));
+    root.style.setProperty('--accent-glow', hexToRgba(palette.primary, 0.3));
+    root.style.setProperty('--accent-hero-primary', palette.heroPrimary);
+    root.style.setProperty('--accent-hero-strong', palette.heroStrong);
+    root.style.setProperty('--accent-hero-soft', palette.heroSoft);
+    // Legacy names kept for anything still reading them.
     root.style.setProperty('--color-accent-primary', activeTheme.cssVars.primary);
-    root.style.setProperty('--color-accent-hover', activeTheme.cssVars.hover);
     root.style.setProperty('--color-accent-light', activeTheme.cssVars.light);
     root.style.setProperty('--color-accent-bg-subtle', activeTheme.cssVars.bgSubtle);
     root.style.setProperty('--color-accent-border', activeTheme.cssVars.border);
     root.style.setProperty('--color-accent-glow', activeTheme.cssVars.glow);
-  }, [activeTheme]);
+  }, [activeTheme, palette, accentSource]);
 
-  const setAccent = (accentId: AccentId) => {
-    setAccentState(accentId);
-    localStorage.setItem('meditrust_theme_accent', accentId);
+  const persistPageAccents = (next: PageAccents) => {
+    setPageAccentsState(next);
+    try {
+      localStorage.setItem(PAGE_ACCENTS_KEY, JSON.stringify(next));
+    } catch {
+      /* storage unavailable — keep the in-memory choice */
+    }
   };
 
-  const resetTheme = () => {
-    setAccent('cyan');
+  const setAccent = (accentId: AccentId, targetScope: ThemeScope = scope) => {
+    if (targetScope === 'page') {
+      persistPageAccents(withPageAccent(pageAccents, currentRoute, accentId));
+      return;
+    }
+    setSiteAccentState(accentId);
+    try {
+      localStorage.setItem(SITE_ACCENT_KEY, accentId);
+    } catch {
+      /* storage unavailable — keep the in-memory choice */
+    }
+    // A site-wide choice must win on the page the user is looking at.
+    if (pageAccents[currentRoute]) {
+      persistPageAccents(withPageAccent(pageAccents, currentRoute, null));
+    }
+  };
+
+  const clearPageAccent = () => {
+    if (pageAccents[currentRoute]) {
+      persistPageAccents(withPageAccent(pageAccents, currentRoute, null));
+    }
+  };
+
+  const resetTheme = (targetScope: ThemeScope = scope) => {
+    if (targetScope === 'page') {
+      clearPageAccent();
+      return;
+    }
+    setAccent(DEFAULT_SITE_ACCENT, 'site');
   };
 
   return (
     <ThemeContext.Provider
       value={{
         accent,
+        accentSource,
+        siteAccent,
+        pageAccent,
+        scope,
+        setScope,
         setAccent,
+        clearPageAccent,
         activeTheme,
         accentOptions: ACCENT_OPTIONS,
         isThemeModalOpen,

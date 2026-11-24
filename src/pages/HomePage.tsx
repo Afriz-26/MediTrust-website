@@ -12,7 +12,7 @@ const careOptions = [
     description: 'Explore doctor and clinic listings by specialty and location.',
     href: '/doctors',
     icon: Stethoscope,
-    tone: 'bg-[#e5f0f6] text-[#247BA0]'
+    tone: 'bg-[#e5f0f6] text-hero-primary'
   },
   {
     title: 'Find a hospital',
@@ -50,7 +50,7 @@ const moreToExplore = [
     description: 'Learn how to explore healthcare information and local listings.',
     href: '/how-it-works',
     icon: BookOpen,
-    tone: 'bg-[#e5f0f6] text-[#247BA0]'
+    tone: 'bg-[#e5f0f6] text-hero-primary'
   },
   {
     title: 'Health guides and updates',
@@ -85,7 +85,7 @@ const moreToExplore = [
     description: 'Explore healthcare search and platform services.',
     href: '/services',
     icon: Stethoscope,
-    tone: 'bg-[#e5f0f6] text-[#247BA0]'
+    tone: 'bg-[#e5f0f6] text-hero-primary'
   }
 ];
 
@@ -93,7 +93,7 @@ const bandImage =
   'https://media.base44.com/images/public/6b030cdbdc778ab3ef0d040a/1ccbc8745d09edcf2daa8f88ef674e2e_generated_7d9f9800.jpg';
 
 const cardClass =
-  'group flex flex-col rounded-[20px] border border-[#e1e8ec] bg-white p-[22px] text-inherit no-underline shadow-[0_14px_34px_-26px_rgba(16,42,67,0.35)] transition-[box-shadow,border-color,background] duration-300 hover:border-[#bcd6e0] hover:shadow-[0_22px_44px_-26px_rgba(36,123,160,0.45)] active:bg-[#f6fafb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#247BA0]';
+  'group flex flex-col rounded-[20px] border border-[#e1e8ec] bg-white p-[22px] text-inherit no-underline shadow-[0_14px_34px_-26px_rgba(16,42,67,0.35)] transition-[box-shadow,border-color,background] duration-300 hover:border-[#bcd6e0] hover:shadow-[0_22px_44px_-26px_rgba(36,123,160,0.45)] active:bg-[#f6fafb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-primary';
 
 export const HomePage: React.FC = () => (
   <div className="min-h-screen bg-[#FAFAF7] text-[#102A43]">
@@ -109,7 +109,7 @@ export const HomePage: React.FC = () => (
       <section className="py-10">
         <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end sm:gap-10">
           <div>
-            <p className="m-0 text-[13px] font-bold uppercase tracking-[2px] text-[#4A9B8A]">Start with what you need</p>
+            <p className="m-0 text-[13px] font-bold uppercase tracking-[2px] text-hero-accent">Start with what you need</p>
             <h2 className="mt-3 text-[2rem] font-bold leading-[1.1] tracking-[-1.2px] text-[#102A43] sm:text-[40px]">
               Everyday healthcare, easier to find.
             </h2>
@@ -122,7 +122,7 @@ export const HomePage: React.FC = () => (
         <div className="relative mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div
             aria-hidden="true"
-            className="absolute -top-3.5 left-[10%] right-[10%] hidden h-0.5 bg-[#4A9B8A] opacity-70 lg:block"
+            className="absolute -top-3.5 left-[10%] right-[10%] hidden h-0.5 bg-hero-accent opacity-70 lg:block"
           />
           {careOptions.map((option) => {
             const Icon = option.icon;
@@ -130,14 +130,14 @@ export const HomePage: React.FC = () => (
               <Link key={option.title} to={option.href} className={`relative ${cardClass}`}>
                 <span
                   aria-hidden="true"
-                  className="absolute -top-[19px] left-1/2 hidden h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-[#4A9B8A] shadow-[0_0_0_4px_#FAFAF7] lg:block"
+                  className="absolute -top-[19px] left-1/2 hidden h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-hero-accent shadow-[0_0_0_4px_#FAFAF7] lg:block"
                 />
                 <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${option.tone}`}>
                   <Icon className="h-[21px] w-[21px]" />
                 </span>
                 <h3 className="mt-[18px] text-lg font-bold leading-tight text-[#102A43]">{option.title}</h3>
                 <p className="mt-2 flex-1 text-sm leading-[1.6] text-[#627d98]">{option.description}</p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#247BA0]">
+                <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-hero-primary">
                   Explore
                   <ArrowRight className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-[3px]" />
                 </span>
@@ -148,7 +148,7 @@ export const HomePage: React.FC = () => (
       </section>
 
       <section className="pt-7 pb-10">
-        <p className="m-0 text-[13px] font-bold uppercase tracking-[2px] text-[#4A9B8A]">More to explore</p>
+        <p className="m-0 text-[13px] font-bold uppercase tracking-[2px] text-hero-accent">More to explore</p>
         <h2 className="mt-3 text-[26px] font-bold leading-[1.1] tracking-[-1px] text-[#102A43] sm:text-[32px]">
           Get to know MediTrust.
         </h2>
@@ -164,7 +164,7 @@ export const HomePage: React.FC = () => (
                 <span>
                   <h3 className="m-0 text-[17px] font-bold leading-tight text-[#102A43]">{item.title}</h3>
                   <span className="mt-2 block text-sm leading-[1.6] text-[#627d98]">{item.description}</span>
-                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#247BA0]">
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-hero-primary">
                     Explore
                     <ArrowRight className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-[3px]" />
                   </span>

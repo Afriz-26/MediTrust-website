@@ -63,7 +63,7 @@ export interface StructuredMedicineData {
   storageAndHandling: string;
   dataSource: {
     name: string;
-    type: 'openFDA' | 'CDSCO/DPCO' | 'Clinical Monograph';
+    type: 'openFDA' | 'CDSCO/DPCO' | 'Clinical Monograph' | 'Reference catalog';
     officialUrl?: string;
     lastVerified: string;
   };

@@ -85,14 +85,14 @@ export const HealthcareHero: React.FC = () => {
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-[72px]">
         <div className="grid grid-cols-1 items-center gap-12 py-14 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:py-[72px]">
           <div className="min-w-0">
-            <div className="rise-1 mb-6 inline-flex items-center gap-2 rounded-full border border-[#cfe0dc] bg-white px-4 py-2 text-sm font-semibold leading-tight text-[#247BA0]">
+            <div className="rise-1 mb-6 inline-flex items-center gap-2 rounded-full border border-[#cfe0dc] bg-white px-4 py-2 text-sm font-semibold leading-tight text-hero-primary">
               <ShieldCheck className="h-4 w-4" />
               Care that feels a little more connected
             </div>
 
             <h1 className="rise-2 m-0 text-[2.5rem] font-bold leading-[1.06] tracking-[-1.8px] text-[#102A43] sm:text-5xl lg:text-[64px]">
               Find the care you need,{' '}
-              <em className="block not-italic text-[#4A9B8A]">without the runaround.</em>
+              <em className="block not-italic text-hero-accent">without the runaround.</em>
             </h1>
             <p className="rise-3 mt-6 max-w-[520px] text-base leading-[1.65] text-[#486581] sm:text-lg">
               Find doctors and hospitals, explore nearby pharmacies, and look up medicine information. Open local listings in Google Maps.
@@ -110,7 +110,7 @@ export const HealthcareHero: React.FC = () => {
                     role="tab"
                     aria-selected={searchType === tab.id}
                     onClick={() => setSearchType(tab.id)}
-                    className={`inline-flex shrink-0 items-center gap-[7px] rounded-xl px-3 py-[9px] text-sm font-semibold leading-tight transition-colors duration-200 active:bg-[#e5eef0] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#247BA0] ${
+                    className={`inline-flex shrink-0 items-center gap-[7px] rounded-xl px-3 py-[9px] text-sm font-semibold leading-tight transition-colors duration-200 active:bg-[#e5eef0] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-hero-primary ${
                       searchType === tab.id
                         ? 'bg-[#e6f1f2] text-[#1d6a8a]'
                         : 'bg-transparent text-[#52667a] hover:bg-[#f1f5f6] hover:text-[#102A43]'
@@ -143,7 +143,7 @@ export const HealthcareHero: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#247BA0] px-5 text-sm font-bold text-white transition-[background,box-shadow] duration-200 hover:bg-[#1c6584] hover:shadow-[0_10px_22px_-12px_rgba(36,123,160,0.7)] active:bg-[#175370] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102A43]"
+                  className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-hero-primary px-5 text-sm font-bold text-white transition-[background,box-shadow] duration-200 hover:bg-hero-strong hover:shadow-[0_10px_22px_-12px_rgba(36,123,160,0.7)] active:bg-[#175370] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102A43]"
                 >
                   Search care
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[3px]" />
@@ -155,7 +155,7 @@ export const HealthcareHero: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsLocationModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-[10px] p-2 text-sm font-semibold leading-none text-[#2f5f78] transition-colors duration-200 hover:bg-[#eef5f6] active:bg-[#e1edef] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#247BA0]"
+                  className="inline-flex items-center gap-1.5 rounded-[10px] p-2 text-sm font-semibold leading-none text-[#2f5f78] transition-colors duration-200 hover:bg-[#eef5f6] active:bg-[#e1edef] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-hero-primary"
                 >
                   <MapPin className="h-4 w-4" />
                   {location.city || 'Choose location'}
@@ -165,11 +165,11 @@ export const HealthcareHero: React.FC = () => {
 
             <div className="rise-4 mt-6 flex flex-wrap gap-x-[22px] gap-y-3 text-sm text-[#52667a]">
               <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[#4A9B8A]" />
+                <ShieldCheck className="h-4 w-4 text-hero-accent" />
                 Clear, useful healthcare information
               </span>
               <span className="inline-flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[#4A9B8A]" />
+                <MapPin className="h-4 w-4 text-hero-accent" />
                 Search by location
               </span>
             </div>

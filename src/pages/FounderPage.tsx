@@ -47,7 +47,7 @@ export const FounderPage: React.FC = () => {
         
         {/* Header Tag */}
         <div className="text-center max-w-2xl mx-auto">
-          <span className="tag-pill bg-[#EAF5F1] text-[#0E6763] border border-[#DCEFEA] text-xs font-bold">
+          <span className="tag-pill bg-mint-subtle text-teal-brand border border-mint-subtle text-xs font-bold">
             <Building className="w-3.5 h-3.5" /> Founder & Executive Leadership
           </span>
         </div>
@@ -63,7 +63,7 @@ export const FounderPage: React.FC = () => {
 
               <div className="space-y-1">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#101515]">{FOUNDER_DATA.name}</h1>
-                <p className="text-sm font-bold text-[#0E6763]">{FOUNDER_DATA.designation}</p>
+                <p className="text-sm font-bold text-teal-brand">{FOUNDER_DATA.designation}</p>
                 <p className="text-xs text-[#737A78]">{FOUNDER_DATA.company} • {FOUNDER_DATA.location}</p>
               </div>
 
@@ -115,20 +115,20 @@ export const FounderPage: React.FC = () => {
             {/* Vision & Mission Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="card-editorial p-5 bg-white space-y-2">
-                <Compass className="w-5 h-5 text-[#0E6763]" />
+                <Compass className="w-5 h-5 text-teal-brand" />
                 <h3 className="text-sm font-bold text-[#101515]">Vision</h3>
                 <p className="text-xs text-[#737A78] leading-relaxed">{FOUNDER_DATA.vision}</p>
               </div>
 
               <div className="card-editorial p-5 bg-white space-y-2">
-                <Sparkles className="w-5 h-5 text-[#0E6763]" />
+                <Sparkles className="w-5 h-5 text-teal-brand" />
                 <h3 className="text-sm font-bold text-[#101515]">Mission</h3>
                 <p className="text-xs text-[#737A78] leading-relaxed">{FOUNDER_DATA.mission}</p>
               </div>
             </div>
 
             {/* Quote */}
-            <div className="p-6 rounded-2xl bg-[#EAF5F1] border border-[#DCEFEA] text-[#0E6763] space-y-2">
+            <div className="p-6 rounded-2xl bg-mint-subtle border border-mint-subtle text-teal-brand space-y-2">
               <p className="text-xs sm:text-sm italic font-medium leading-relaxed">
                 "{FOUNDER_DATA.quote}"
               </p>
@@ -140,7 +140,7 @@ export const FounderPage: React.FC = () => {
 
         {/* Family Roots & Heritage Card */}
         <div className="card-editorial p-8 bg-white border border-[#E7EAE7] space-y-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-[#0E6763]">
+          <div className="flex items-center gap-2 text-sm font-bold text-teal-brand">
             <Heart className="w-4 h-4" />
             <span>Roots & Foundation</span>
           </div>
@@ -167,13 +167,13 @@ export const FounderPage: React.FC = () => {
         {/* Key Achievements */}
         <div className="card-editorial p-8 bg-white border border-[#E7EAE7] space-y-6">
           <div className="flex items-center space-x-3">
-            <Award className="w-6 h-6 text-[#0E6763]" />
+            <Award className="w-6 h-6 text-teal-brand" />
             <h3 className="text-xl font-bold text-[#101515]">Key Milestones</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {FOUNDER_DATA.achievements.map((ach, i) => (
               <div key={i} className="flex items-start space-x-3 text-xs sm:text-sm text-[#737A78] p-3 rounded-xl bg-[#F7F8F6]">
-                <ShieldCheck className="w-4 h-4 text-[#0E6763] shrink-0 mt-0.5" />
+                <ShieldCheck className="w-4 h-4 text-teal-brand shrink-0 mt-0.5" />
                 <span>{ach}</span>
               </div>
             ))}
