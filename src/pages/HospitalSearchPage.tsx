@@ -10,6 +10,7 @@ import { HOSPITAL_SEARCH_KEYWORDS } from '../lib/seo';
 import { SEO } from '../components/common/SEO';
 import { DemandRequestModal } from '../components/modals/DemandRequestModal';
 import { SearchAutocomplete } from '../components/common/SearchAutocomplete';
+import { NearbyCareMap } from '../components/locator/NearbyCareMap';
 
 export const HospitalSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -86,6 +87,9 @@ export const HospitalSearchPage: React.FC = () => {
             placeholder="Search hospital name, city, department, or NABH accreditation..." 
           />
         </div>
+
+        {/* OpenStreetMap locator: hospitals and pharmacies near the visitor */}
+        <NearbyCareMap defaultType="hospital" variant="dark" />
 
         {/* Location Notice Banner if no partnered hospital exists */}
         {location.city && filteredHospitals.filter(h => h.onboardingStatus === 'Active' || h.onboardingStatus === 'Verified').length === 0 && (
